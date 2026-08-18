@@ -3,77 +3,159 @@
     "main-product": {
       "type": "main-product-modal",
       "blocks": {
-        "vendor": {
-          "type": "text",
-          "settings": {
-            "text": "{{ product.vendor }}",
-            "text_size": "text-base"
-          }
+        "breadcrumb": {
+          "type": "product-breadcrumb",
+          "settings": {}
         },
         "title": {
-          "type": "title",
+          "type": "product-title",
           "settings": {
-            "title_size": "product-title-md",
-            "title_size_mobile": "product-title-md",
-            "show_price": true,
-            "show_rating": true
+            "limit_width": false,
+            "text_wrap": "normal"
           }
         },
-        "variant_picker": {
-          "type": "variant_picker",
-          "settings": {
-            "show_variant_labels": true,
-            "picker_type": "button",
-            "enable_color_swatches": true,
-            "color_swatch_type": "color",
-            "size_chart": ""
-          }
+        "rating": {
+          "type": "product-rating",
+          "settings": {}
+        },
+        "price": {
+          "type": "product-price",
+          "settings": {}
         },
         "inventory": {
-          "type": "inventory",
+          "type": "product-inventory",
           "settings": {
             "inventory_style": "status_bar",
-            "inventory_threshold": 15,
+            "inventory_threshold": 10,
             "inventory_bar_max": 20,
-            "show_inventory_transfer": true,
             "show_inventory_quantity": "always",
+            "show_inventory_transfer": true,
             "in_stock_color": "#109B36",
             "low_stock_color": "#109B36",
             "bar_background_color": "#E5E7EB"
           }
         },
+        "description": {
+          "type": "product-description",
+          "settings": {}
+        },
+        "variants": {
+          "type": "product-variant-picker",
+          "settings": {}
+        },
+        "quantity": {
+          "type": "product-quantity-selector",
+          "settings": {}
+        },
         "buy_buttons": {
-          "type": "buy_buttons",
+          "type": "product-buy-buttons",
           "settings": {
-            "show_quantity_selector": true,
-            "show_price": false,
-            "show_dynamic_checkout": false,
-            "show_gift_card_recipient": true,
-            "enable_back_in_stock": true,
-            "show_back_in_stock_name": true,
-            "show_back_in_stock_phone": true
+            "show_quantity_selector": false
           }
         },
-        "read_more": {
-          "type": "read_more",
+        "pickup": {
+          "type": "product-pickup",
+          "settings": {}
+        },
+        "share": {
+          "type": "product-share",
           "settings": {
+            "share_label": "Share",
+            "show_help_desk": true,
+            "help_label": "Need help?",
+            "help_type": "drawer"
+          },
+          "blocks": {
+            "shipping_content": {
+              "type": "_product-help-content",
+              "settings": {
+                "icon": "rocket",
+                "heading": "Shipping <em>information</em>",
+                "text": "<p>Share delivery times, order processing details, and shipping policies.</p>",
+                "highlighted_text": "half_text",
+                "color_text": "#7C4A03",
+                "color_background": "#FFF8E8",
+                "color_highlight": "#FFD99A"
+              }
+            },
+            "customer_support": {
+              "type": "_product-help-item",
+              "settings": {
+                "icon": "email",
+                "heading": "Customer support",
+                "text": "<p>Send us a message and our team will help you.</p>",
+                "link_label": "Email us",
+                "link_type": "email"
+              }
+            },
+            "contact_help": {
+              "type": "_product-help-item",
+              "settings": {
+                "icon": "chat_bubble",
+                "heading": "More ways to get help",
+                "text": "<p>Find answers, delivery information, and store policies.</p>",
+                "link_label": "Contact us",
+                "link_type": "url"
+              }
+            }
+          },
+          "block_order": [
+            "shipping_content",
+            "customer_support",
+            "contact_help"
+          ]
+        },
+        "details": {
+          "type": "product-accordion",
+          "settings": {
+            "heading": "Shipping and returns"
           }
         }
       },
       "block_order": [
-        "vendor",
+        "breadcrumb",
         "title",
-        "variant_picker",
+        "rating",
+        "price",
         "inventory",
+        "description",
+        "variants",
+        "quantity",
         "buy_buttons",
-        "read_more"
+        "pickup",
+        "share",
+        "details"
       ],
       "settings": {
+        "layout_style": "clean",
+        "media_position": "left",
+        "media_size": 50,
+        "desktop_gap": 0,
+        "mobile_gap": 20,
+        "block_gap": 22,
+        "enable_sticky_info": false,
+        "gallery_layout": "thumbnail",
+        "thumbnail_position": "below",
+        "image_ratio": "adapt_first",
         "image_zoom": "lightbox",
         "hide_variants": false,
-        "enable_video_autoplay": true,
-        "enable_video_looping": true,
-        "mobile_layout": "full_width"
+        "enable_video_autoplay": false,
+        "enable_video_looping": false,
+        "mobile_media_position": "first",
+        "mobile_layout": "full_width",
+        "image_ratio_mobile": "adapt_first",
+        "mobile_thumbnail": false,
+        "color_text": "#1C1C1C",
+        "color_background": "#FFFFFF",
+        "panel_background": "#F4F2EE",
+        "media_background": "#F7F7F5",
+        "panel_radius": 0,
+        "content_width": "full",
+        "custom_content_width": 100,
+        "divider": false,
+        "rounded": false,
+        "padding_top": 0,
+        "padding_bottom": 0
       }
     }
   },
