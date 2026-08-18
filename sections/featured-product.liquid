@@ -1,0 +1,71 @@
+{%- capture product_blocks -%}{% content_for 'blocks' %}{%- endcapture -%}
+{%- render 'product-showcase', product_resource: section.settings.product, blocks_content: product_blocks, section: section, mode: 'featured' -%}
+
+{% schema %}
+{
+  "name": "t:sections.featured-product.name",
+  "blocks": [
+    { "type": "product-title" },
+    { "type": "product-rating" },
+    { "type": "product-price" },
+    { "type": "product-description" },
+    { "type": "product-variant-picker" },
+    { "type": "product-buy-buttons" },
+    { "type": "product-inventory" },
+    { "type": "product-pickup" },
+    { "type": "product-text" },
+    { "type": "product-accordion" },
+    { "type": "@app" }
+  ],
+  "settings": [
+    { "type": "product", "id": "product", "label": "t:sections.global.settings.product.label" },
+    { "type": "header", "content": "Layout" },
+    { "type": "select", "id": "layout_style", "label": "Presentation", "options": [{ "value": "clean", "label": "Clean" }, { "value": "soft", "label": "Separate soft panels" }, { "value": "contained", "label": "Contained" }], "default": "soft" },
+    { "type": "select", "id": "media_position", "label": "Desktop media position", "options": [{ "value": "left", "label": "Left" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "range", "id": "media_size", "label": "Desktop media width", "min": 40, "max": 65, "step": 1, "unit": "%", "default": 56 },
+    { "type": "range", "id": "desktop_gap", "label": "Desktop column gap", "min": 16, "max": 96, "step": 4, "unit": "px", "default": 48 },
+    { "type": "range", "id": "mobile_gap", "label": "Mobile column gap", "min": 8, "max": 48, "step": 4, "unit": "px", "default": 20 },
+    { "type": "range", "id": "block_gap", "label": "Details block spacing", "min": 8, "max": 48, "step": 2, "unit": "px", "default": 22 },
+    { "type": "checkbox", "id": "enable_sticky_info", "label": "Sticky product details on desktop", "default": true },
+    { "type": "header", "content": "Product media" },
+    { "type": "select", "id": "gallery_layout", "label": "Gallery layout", "options": [{ "value": "thumbnail", "label": "Thumbnails" }, { "value": "columns", "label": "Columns" }, { "value": "scroll", "label": "Scroll" }], "default": "thumbnail" },
+    { "type": "select", "id": "thumbnail_position", "label": "Thumbnail position", "options": [{ "value": "below", "label": "Below" }, { "value": "beside", "label": "Beside" }], "default": "below", "visible_if": "{{ section.settings.gallery_layout == 'thumbnail' }}" },
+    { "type": "select", "id": "image_ratio", "label": "Desktop image ratio", "options": [{ "value": "adapt", "label": "Adapt" }, { "value": "square", "label": "Square" }, { "value": "portrait", "label": "Portrait" }, { "value": "landscape", "label": "Landscape" }, { "value": "wide", "label": "Wide" }, { "value": "adapt_first", "label": "Adapt to first image" }], "default": "adapt_first" },
+    { "type": "select", "id": "image_zoom", "label": "Image zoom", "options": [{ "value": "lightbox", "label": "Lightbox" }, { "value": "hover", "label": "Hover" }, { "value": "none", "label": "None" }], "default": "lightbox" },
+    { "type": "checkbox", "id": "hide_variants", "label": "Hide media for other variants", "default": false },
+    { "type": "checkbox", "id": "enable_video_autoplay", "label": "Autoplay product videos", "default": false },
+    { "type": "checkbox", "id": "enable_video_looping", "label": "Loop product videos", "default": false },
+    { "type": "header", "content": "Mobile" },
+    { "type": "select", "id": "mobile_media_position", "label": "Mobile media position", "options": [{ "value": "first", "label": "Media first" }, { "value": "last", "label": "Media last" }], "default": "first" },
+    { "type": "select", "id": "mobile_layout", "label": "Mobile gallery width", "options": [{ "value": "partial", "label": "Show next image" }, { "value": "full_width", "label": "Full width" }], "default": "full_width" },
+    { "type": "select", "id": "image_ratio_mobile", "label": "Mobile image ratio", "options": [{ "value": "adapt", "label": "Adapt" }, { "value": "square", "label": "Square" }, { "value": "portrait", "label": "Portrait" }, { "value": "landscape", "label": "Landscape" }, { "value": "wide", "label": "Wide" }, { "value": "adapt_first", "label": "Adapt to first image" }], "default": "adapt_first" },
+    { "type": "checkbox", "id": "mobile_thumbnail", "label": "Show thumbnails on mobile", "default": false },
+    { "type": "header", "content": "Colors and shape" },
+    { "type": "color", "id": "color_text", "label": "Text color", "default": "#1C1C1C" },
+    { "type": "color", "id": "color_background", "label": "Section background", "default": "#FFFFFF" },
+    { "type": "color", "id": "panel_background", "label": "Details panel background", "default": "#F4F2EE" },
+    { "type": "color", "id": "media_background", "label": "Media background", "default": "#F7F7F5" },
+    { "type": "range", "id": "panel_radius", "label": "Panel corner radius", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 20 },
+    { "type": "header", "content": "Section" },
+    { "type": "select", "id": "content_width", "label": "Content width", "options": [{ "value": "page", "label": "Page width" }, { "value": "full", "label": "Full width" }, { "value": "custom", "label": "Custom" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "Custom content width", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+    { "type": "checkbox", "id": "divider", "label": "Show divider", "default": false },
+    { "type": "checkbox", "id": "rounded", "label": "Round section corners", "default": false },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 }
+  ],
+  "presets": [{
+    "name": "t:sections.featured-product.presets.name",
+    "blocks": [
+      { "type": "product-title" },
+      { "type": "product-rating" },
+      { "type": "product-price" },
+      { "type": "product-description" },
+      { "type": "product-variant-picker" },
+      { "type": "product-buy-buttons" },
+      { "type": "product-pickup" }
+    ]
+  }],
+  "disabled_on": { "groups": ["header", "footer", "custom.overlay"] }
+}
+{% endschema %}

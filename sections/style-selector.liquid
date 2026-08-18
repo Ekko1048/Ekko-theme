@@ -1,0 +1,786 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    --section-padding-top: {{ section.settings.padding_top }}px;
+    --section-padding-bottom: {{ section.settings.padding_bottom }}px;
+    --ekko-style-selector-width: {{ section.settings.custom_content_width }}vw;
+    --ekko-style-selector-gap: {{ section.settings.card_gap }}px;
+    --ekko-style-selector-gap-mobile: {{ section.settings.card_gap_mobile }}px;
+    --ekko-style-selector-radius: {{ section.settings.card_radius }}px;
+    --ekko-style-selector-heading-size: {{ section.settings.heading_size }}px;
+    --ekko-style-selector-heading-size-mobile: {{ section.settings.heading_size_mobile }}px;
+    --ekko-style-selector-heading-color: {{ section.settings.heading_color }};
+    --ekko-style-selector-background: {{ section.settings.background_color }};
+    {%- if section.settings.background_gradient != blank -%}
+      --ekko-style-selector-background: {{ section.settings.background_gradient }};
+    {%- endif -%}
+  }
+{% endstyle %}
+
+<section
+  class="section section--padding ekko-style-selector"
+  {% if section.settings.heading != blank %}aria-labelledby="StyleSelectorHeading-{{ section.id }}"{% endif %}
+>
+  <div class="ekko-style-selector__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
+    {%- if section.settings.eyebrow != blank or section.settings.heading != blank -%}
+      <header class="ekko-style-selector__header" data-alignment="{{ section.settings.heading_alignment }}">
+        {%- if section.settings.eyebrow != blank -%}
+          <p class="ekko-style-selector__eyebrow">{{ section.settings.eyebrow | escape }}</p>
+        {%- endif -%}
+
+        {%- if section.settings.heading != blank -%}
+          <div class="ekko-style-selector__title-row">
+            <h2 id="StyleSelectorHeading-{{ section.id }}" class="ekko-style-selector__heading">{{ section.settings.heading }}</h2>
+          </div>
+        {%- endif -%}
+      </header>
+    {%- endif -%}
+
+    <div
+      class="ekko-style-selector__grid ekko-paint-layer"
+      data-mobile-layout="{{ section.settings.mobile_layout }}"
+      role="list"
+    >
+      {%- for block in section.blocks -%}
+        {%- liquid
+          assign card_alt = block.settings.image_alt
+          if card_alt == blank
+            assign card_alt = block.settings.heading | strip_html
+          endif
+          assign tags = block.settings.tags | split: ','
+        -%}
+        <div class="ekko-style-selector__item" role="listitem" {{ block.shopify_attributes }}>
+          <article
+            class="ekko-style-card"
+            style="--card-background: {{ block.settings.card_background }}; --card-text: {{ block.settings.text_color }}; --card-accent: {{ block.settings.accent_color }}; --card-title-size: {{ block.settings.heading_size }}px;"
+          >
+            <span class="ekko-style-card__base" aria-hidden="true"></span>
+
+            <div class="ekko-style-card__media">
+              {%- if block.settings.image != blank -%}
+                {%- capture image_markup -%}
+                  {{- block.settings.image
+                    | image_url: width: 1200
+                    | image_tag:
+                      loading: 'lazy',
+                      widths: '240, 360, 480, 640, 800, 1000, 1200',
+                      sizes: '(max-width: 749px) 72vw, (max-width: 1199px) 34vw, 280px',
+                      alt: card_alt,
+                      class: 'ekko-style-card__image'
+                  -}}
+                {%- endcapture -%}
+                {%- if block.settings.link != blank -%}
+                  <a class="ekko-style-card__media-link" href="{{ block.settings.link }}" aria-label="{{ block.settings.link_label | default: card_alt | escape }}">
+                    {{- image_markup -}}
+                  </a>
+                {%- else -%}
+                  {{- image_markup -}}
+                {%- endif -%}
+              {%- else -%}
+                {{ 'product-1' | placeholder_svg_tag: 'ekko-style-card__placeholder' }}
+              {%- endif -%}
+            </div>
+
+            <div class="ekko-style-card__content" data-alignment="{{ block.settings.text_alignment }}">
+              {%- if block.settings.heading != blank -%}
+                <h3 class="ekko-style-card__heading">{{ block.settings.heading }}</h3>
+              {%- endif -%}
+
+              {%- if block.settings.tags != blank -%}
+                <ul class="ekko-style-card__tags" aria-label="Category tags">
+                  {%- for tag in tags -%}
+                    {%- assign clean_tag = tag | strip -%}
+                    {%- if clean_tag != blank -%}
+                      <li class="ekko-style-card__tag">{{ clean_tag | escape }}</li>
+                    {%- endif -%}
+                  {%- endfor -%}
+                </ul>
+              {%- endif -%}
+
+              {%- if block.settings.description != blank -%}
+                <div class="ekko-style-card__description rte">{{ block.settings.description }}</div>
+              {%- endif -%}
+
+              {%- if block.settings.link_label != blank -%}
+                <a class="ekko-style-card__link"{% if block.settings.link != blank %} href="{{ block.settings.link }}"{% else %} role="link" aria-disabled="true"{% endif %}>
+                  <span>{{ block.settings.link_label | escape }}</span>
+                  {%- if block.settings.show_arrow -%}<span class="ekko-style-card__arrow" aria-hidden="true">&#8594;</span>{%- endif -%}
+                </a>
+              {%- endif -%}
+            </div>
+          </article>
+        </div>
+      {%- endfor -%}
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .ekko-style-selector {
+    color: var(--ekko-style-selector-heading-color);
+    background: var(--ekko-style-selector-background);
+    overflow: hidden;
+  }
+
+  .ekko-style-selector__frame { min-width: 0; }
+
+  .ekko-style-selector__header {
+    display: grid;
+    gap: .65rem;
+    margin-block-end: clamp(1.75rem, 3.4vw, 3.25rem);
+    isolation: isolate;
+  }
+
+  .ekko-style-selector__header[data-alignment='left'] { justify-items: start; text-align: start; }
+  .ekko-style-selector__header[data-alignment='center'] { justify-items: center; text-align: center; }
+  .ekko-style-selector__header[data-alignment='right'] { justify-items: end; text-align: end; }
+
+  .ekko-style-selector__eyebrow {
+    margin: 0;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    line-height: 1.3;
+    text-transform: uppercase;
+    opacity: .64;
+  }
+
+  .ekko-style-selector__title-row {
+    display: flex;
+    align-items: center;
+    gap: clamp(.45rem, 1vw, .75rem);
+  }
+
+  .ekko-style-selector__heading {
+    margin: 0;
+    color: inherit;
+    font-family: var(--font-heading-family);
+    font-size: clamp(1.75rem, 4vw, var(--ekko-style-selector-heading-size));
+    font-weight: var(--font-heading-weight);
+    letter-spacing: -.025em;
+    line-height: 1.08;
+  }
+
+  .ekko-style-selector__heading :is(em, i) { font-weight: inherit; }
+
+  .ekko-style-selector__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--ekko-style-selector-columns), minmax(0, 1fr));
+    gap: var(--ekko-style-selector-gap);
+    min-width: 0;
+    padding-block-start: 1.6rem;
+  }
+
+  .ekko-style-selector__item {
+    min-width: 0;
+    isolation: isolate;
+  }
+
+  .ekko-style-card {
+    position: relative;
+    display: grid;
+    min-height: 17.5rem;
+    height: 100%;
+    grid-template-columns: minmax(0, 41%) minmax(0, 59%);
+    border-radius: var(--ekko-style-selector-radius);
+    color: var(--card-text);
+    background: var(--card-background);
+    box-shadow: 0 1rem 2.8rem color-mix(in srgb, var(--card-text) 8%, transparent);
+  }
+
+  .ekko-style-card__media {
+    position: absolute;
+    z-index: 2;
+    width: 37%;
+    height: calc(100% + 2.7rem);
+    inset-inline-start: 0;
+    inset-block-end: 0;
+    display: grid;
+    align-items: end;
+    justify-items: center;
+    pointer-events: none;
+  }
+
+  .ekko-style-card__media-link {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    align-items: end;
+    justify-items: center;
+    pointer-events: auto;
+  }
+
+  .ekko-style-card__image,
+  .ekko-style-card__placeholder {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    filter: drop-shadow(0 1rem 1.1rem color-mix(in srgb, var(--card-text) 20%, transparent));
+    transition: transform 500ms cubic-bezier(.22, 1, .36, 1);
+  }
+
+  .ekko-style-card__placeholder {
+    width: min(88%, 15rem);
+    color: color-mix(in srgb, var(--card-accent) 55%, var(--card-text));
+    opacity: .38;
+    filter: none;
+  }
+
+  .ekko-style-card__content {
+    grid-column: 2;
+    display: flex;
+    min-width: 0;
+    height: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: .95rem;
+    padding: clamp(1.6rem, 3vw, 2.6rem) clamp(1.4rem, 3vw, 2.75rem) clamp(1.6rem, 3vw, 2.5rem) .75rem;
+  }
+
+  .ekko-style-card__content[data-alignment='center'] { align-items: center; text-align: center; }
+  .ekko-style-card__content[data-alignment='right'] { align-items: flex-end; text-align: end; }
+
+  .ekko-style-card__heading {
+    max-width: 14ch;
+    margin: 0;
+    color: inherit;
+    font-family: var(--font-heading-family);
+    font-size: clamp(1.35rem, 2.4vw, var(--card-title-size));
+    font-weight: var(--font-heading-weight);
+    letter-spacing: -.025em;
+    line-height: 1.05;
+  }
+
+  .ekko-style-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ekko-style-card__content[data-alignment='center'] .ekko-style-card__tags { justify-content: center; }
+  .ekko-style-card__content[data-alignment='right'] .ekko-style-card__tags { justify-content: flex-end; }
+
+  .ekko-style-card__tag {
+    padding: .3rem .65rem .26rem;
+    border: 1px solid color-mix(in srgb, var(--card-accent) 78%, transparent);
+    border-radius: 999px;
+    color: var(--card-accent);
+    background: color-mix(in srgb, var(--card-accent) 7%, transparent);
+    font-size: .66rem;
+    font-weight: 700;
+    letter-spacing: .045em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .ekko-style-card__description {
+    max-width: 32rem;
+    font-size: .92rem;
+    line-height: 1.5;
+    opacity: .78;
+  }
+
+  .ekko-style-card__description > :first-child { margin-block-start: 0; }
+  .ekko-style-card__description > :last-child { margin-block-end: 0; }
+
+  .ekko-style-card__link {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    width: fit-content;
+    margin-block-start: .1rem;
+    color: inherit;
+    font-size: .74rem;
+    font-weight: 750;
+    letter-spacing: .035em;
+    line-height: 1.2;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .ekko-style-card__link > span:first-child {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 100% 1px;
+    transition: background-size 250ms ease;
+  }
+
+  .ekko-style-card__arrow { transition: transform 250ms ease; }
+  .ekko-style-card__link[aria-disabled='true'] { cursor: default; opacity: .7; }
+
+  @media (hover: hover) {
+    .ekko-style-card:has(.ekko-style-card__link:hover) .ekko-style-card__image,
+    .ekko-style-card:has(.ekko-style-card__media-link:hover) .ekko-style-card__image { transform: translateY(-.35rem) rotate(-1.25deg); }
+    .ekko-style-card__link[href]:hover > span:first-child { background-size: 35% 1px; }
+    .ekko-style-card__link[href]:hover .ekko-style-card__arrow { transform: translateX(.25rem); }
+  }
+
+  @media screen and (min-width: 750px) {
+    .ekko-style-selector__frame[data-width='custom'] {
+      width: min(100%, var(--ekko-style-selector-width));
+      max-width: var(--ekko-style-selector-width);
+      margin-inline: auto;
+    }
+  }
+
+  @media screen and (min-width: 750px) and (max-width: 989px) {
+    .ekko-style-selector__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .ekko-style-card { min-height: 25rem; grid-template-columns: 1fr; }
+    .ekko-style-card__media {
+      width: 37%;
+      height: 14rem;
+      inset-inline-start: 0;
+      inset-block: -2rem auto;
+    }
+    .ekko-style-card__content { grid-column: 1; justify-content: flex-start; padding: 13.5rem 1.5rem 1.75rem; }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-style-selector__header { margin-block-end: 1.6rem; }
+    .ekko-style-selector__heading { font-size: var(--ekko-style-selector-heading-size-mobile); }
+    .ekko-style-selector__grid {
+      grid-template-columns: 1fr;
+      gap: var(--ekko-style-selector-gap-mobile);
+      padding-block-start: 1.25rem;
+    }
+    .ekko-style-selector__grid[data-mobile-layout='scroll'] {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: min(86vw, 23rem);
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scroll-padding-inline: 0;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+    .ekko-style-selector__grid[data-mobile-layout='scroll']::-webkit-scrollbar { display: none; }
+    .ekko-style-selector__grid[data-mobile-layout='scroll'] .ekko-style-selector__item {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+    .ekko-style-card {
+      min-height: 26rem;
+      grid-template-columns: 1fr;
+    }
+    .ekko-style-card__media {
+      width: 60%;
+      height: 15rem;
+      inset-inline-start: 0;
+      inset-block: -1.75rem auto;
+    }
+    .ekko-style-card__content {
+      grid-column: 1;
+      justify-content: flex-start;
+      gap: .85rem;
+      padding: 14rem 1.4rem 1.6rem;
+    }
+    .ekko-style-card__heading { max-width: none; font-size: clamp(1.4rem, 7vw, var(--card-title-size)); }
+    .ekko-style-card__description { font-size: .88rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-style-card__image,
+    .ekko-style-card__link > span,
+    .ekko-style-card__arrow { transition: none; }
+  }
+
+  /* L-shaped card composition */
+  .ekko-style-selector {
+    --ekko-style-image-protrusion: clamp(1.75rem, 2.6vw, 2.75rem);
+  }
+
+  .ekko-style-selector__title-row { display: block; }
+
+  .ekko-style-selector__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--ekko-style-selector-gap);
+    padding-block-start: 0;
+    overflow: visible;
+  }
+
+  .ekko-style-selector__item {
+    display: flex;
+    min-width: 0;
+    padding-block-start: var(--ekko-style-image-protrusion);
+  }
+
+  .ekko-style-card {
+    position: relative;
+    display: block;
+    width: 100%;
+    min-height: clamp(20.5rem, 25vw, 23rem);
+    height: auto;
+    aspect-ratio: 1.82 / 1;
+    border-radius: 0;
+    color: var(--card-text);
+    background: transparent;
+    box-shadow: none;
+    isolation: isolate;
+  }
+
+  .ekko-style-card__base {
+    position: absolute;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .ekko-style-card__base {
+    inset-inline: 0;
+    inset-block: auto 0;
+    height: 66%;
+    border-radius: var(--ekko-style-selector-radius);
+    background: var(--card-background);
+    box-shadow: .8rem 1.1rem 2.5rem color-mix(in srgb, var(--card-text) 7%, transparent);
+  }
+
+  .ekko-style-card__media {
+    z-index: 3;
+    width: 37%;
+    height: calc(100% + var(--ekko-style-image-protrusion));
+    inset-inline: 0 auto;
+    inset-block: auto 0;
+    padding: .7rem .5rem .35rem;
+    pointer-events: none;
+  }
+
+  .ekko-style-card__media-link {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    place-items: end center;
+    pointer-events: auto;
+  }
+
+  .ekko-style-card__image,
+  .ekko-style-card__placeholder {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    object-fit: contain;
+    object-position: center bottom;
+    transform-origin: center bottom;
+    filter: drop-shadow(0 1.05rem 1rem color-mix(in srgb, var(--card-text) 20%, transparent));
+    transition: transform 450ms cubic-bezier(.22, 1, .36, 1), filter 450ms ease;
+  }
+
+  .ekko-style-card__placeholder {
+    width: min(72%, 12rem);
+    color: color-mix(in srgb, var(--card-accent) 58%, var(--card-text));
+    opacity: .34;
+    filter: none;
+  }
+
+  .ekko-style-card__content {
+    position: absolute;
+    z-index: 2;
+    inset-inline: 37% 0;
+    inset-block: auto 0;
+    display: flex;
+    min-width: 0;
+    height: 66%;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: clamp(.55rem, 1vw, .8rem);
+    padding: clamp(1.35rem, 2.25vw, 2rem) clamp(1.35rem, 2.6vw, 2.35rem) clamp(1.25rem, 2vw, 1.8rem);
+  }
+
+  .ekko-style-card__heading {
+    max-width: none;
+    font-size: clamp(1.45rem, 2.2vw, var(--card-title-size));
+    line-height: 1.04;
+  }
+
+  .ekko-style-card__tags { gap: .4rem; }
+
+  .ekko-style-card__tag {
+    padding: .3rem .62rem .27rem;
+    background: color-mix(in srgb, var(--card-accent) 6%, transparent);
+    font-size: .63rem;
+  }
+
+  .ekko-style-card__description {
+    max-width: none;
+    font-size: clamp(.82rem, 1.15vw, .94rem);
+    line-height: 1.45;
+  }
+
+  .ekko-style-card__link {
+    margin-block-start: auto;
+    padding-block-start: .15rem;
+  }
+
+  @media (hover: hover) {
+    .ekko-style-card:has(.ekko-style-card__link:hover) .ekko-style-card__image,
+    .ekko-style-card:has(.ekko-style-card__media-link:hover) .ekko-style-card__image {
+      transform: scale(1.015);
+      filter: drop-shadow(0 1.2rem 1.15rem color-mix(in srgb, var(--card-text) 24%, transparent));
+    }
+  }
+
+  @media screen and (min-width: 750px) and (max-width: 1099px) {
+    .ekko-style-selector__grid { grid-template-columns: minmax(0, 1fr); }
+    .ekko-style-card {
+      width: min(100%, 52rem);
+      min-height: 22rem;
+      margin-inline: auto;
+      aspect-ratio: 1.95 / 1;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-style-selector {
+      --ekko-style-image-protrusion: clamp(1.5rem, 7vw, 2.15rem);
+    }
+
+    .ekko-style-selector__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--ekko-style-selector-gap-mobile);
+      padding-block-start: 0;
+    }
+
+    .ekko-style-selector__grid[data-mobile-layout='scroll'] {
+      grid-template-columns: none;
+      grid-auto-flow: column;
+      grid-auto-columns: 84%;
+      gap: var(--ekko-style-selector-gap-mobile);
+      overflow-x: auto;
+      overflow-y: hidden;
+      overscroll-behavior-inline: contain;
+      scroll-padding-inline: 0;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .ekko-style-selector__item { padding-block-start: var(--ekko-style-image-protrusion); }
+
+    .ekko-style-card {
+      min-height: 27.5rem;
+      aspect-ratio: auto;
+    }
+
+    .ekko-style-card__base {
+      inset: auto 0 0;
+      width: 100%;
+      height: 56%;
+      border-radius: 0 var(--ekko-style-selector-radius) var(--ekko-style-selector-radius) var(--ekko-style-selector-radius);
+    }
+
+    .ekko-style-card__media {
+      width: 60%;
+      height: calc(48% + var(--ekko-style-image-protrusion));
+      inset: calc(var(--ekko-style-image-protrusion) * -1) auto auto 0;
+      padding: .6rem .45rem .2rem;
+    }
+
+    .ekko-style-card__content {
+      inset: auto 0 0;
+      width: 100%;
+      height: 56%;
+      gap: .7rem;
+      padding: 1.4rem 1.3rem 1.35rem;
+    }
+
+    .ekko-style-card__heading { font-size: clamp(1.4rem, 7vw, var(--card-title-size)); }
+    .ekko-style-card__description { font-size: .86rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-style-card__image { transition: none; }
+  }
+
+  /* Media fills its assigned area without a decorative panel, border, or shadow. */
+  .ekko-style-card__media,
+  .ekko-style-card__media-link {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .ekko-style-card__media {
+    overflow: hidden;
+    border-radius: 0 0 0 var(--ekko-style-selector-radius);
+  }
+
+  .ekko-style-card__image {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    object-fit: cover;
+    object-position: center;
+    filter: none;
+  }
+
+  @media (hover: hover) {
+    .ekko-style-card:has(.ekko-style-card__link:hover) .ekko-style-card__image,
+    .ekko-style-card:has(.ekko-style-card__media-link:hover) .ekko-style-card__image {
+      filter: none;
+    }
+  }
+
+  .ekko-style-card__placeholder {
+    object-fit: contain;
+    object-position: center;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-style-selector { --ekko-style-image-protrusion: 0px; }
+
+    .ekko-style-selector__item { padding-block-start: 0; }
+
+    .ekko-style-card {
+      display: grid;
+      min-height: 0;
+      grid-template-rows: auto auto;
+      overflow: hidden;
+      border-radius: var(--ekko-style-selector-radius);
+      background: transparent;
+      box-shadow: none;
+    }
+
+    .ekko-style-card__base {
+      display: none;
+    }
+
+    .ekko-style-card__media {
+      position: relative;
+      inset: auto;
+      grid-row: 1;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1.1 / 1;
+      padding: 0;
+      overflow: hidden;
+      border-radius: var(--ekko-style-selector-radius) var(--ekko-style-selector-radius) 0 0;
+    }
+
+    .ekko-style-card__content {
+      position: relative;
+      inset: auto;
+      grid-row: 2;
+      width: 100%;
+      height: auto;
+      min-height: 13rem;
+      margin-block-start: -1rem;
+      padding: calc(1.35rem + 1rem) 1.3rem 1.3rem;
+      border-radius: 0 0 var(--ekko-style-selector-radius) var(--ekko-style-selector-radius);
+      background: var(--card-background);
+    }
+
+    .ekko-style-card__heading { overflow-wrap: anywhere; }
+
+    .ekko-style-card__image {
+      object-fit: cover;
+      object-position: center;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Category selector",
+  "tag": "section",
+  "class": "section-style-selector",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "header", "content": "Heading" },
+    { "type": "text", "id": "eyebrow", "label": "Eyebrow" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Explore categories" },
+    { "type": "text_alignment", "id": "heading_alignment", "label": "Heading alignment", "default": "center" },
+    { "type": "range", "id": "heading_size", "label": "Heading size", "min": 28, "max": 72, "step": 2, "unit": "px", "default": 42 },
+    { "type": "range", "id": "heading_size_mobile", "label": "Mobile heading size", "min": 22, "max": 48, "step": 2, "unit": "px", "default": 30 },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "card_gap", "label": "Card gap", "min": 8, "max": 48, "step": 2, "unit": "px", "default": 20 },
+    { "type": "range", "id": "card_radius", "label": "Card corner radius", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 24 },
+    { "type": "select", "id": "content_width", "label": "Content width", "options": [{ "value": "page", "label": "Page width" }, { "value": "full", "label": "Full width" }, { "value": "custom", "label": "Custom" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "Custom content width", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+
+    { "type": "header", "content": "Mobile" },
+    { "type": "select", "id": "mobile_layout", "label": "Mobile layout", "options": [{ "value": "scroll", "label": "Swipe with next-card preview" }, { "value": "stack", "label": "Stack cards" }], "default": "scroll" },
+    { "type": "range", "id": "card_gap_mobile", "label": "Mobile card gap", "min": 8, "max": 32, "step": 2, "unit": "px", "default": 14 },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "heading_color", "label": "Heading color", "default": "#171717" },
+    { "type": "color", "id": "background_color", "label": "Background", "default": "#ffffff" },
+    { "type": "color_background", "id": "background_gradient", "label": "Background gradient" },
+
+    { "type": "header", "content": "Section spacing" },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 }
+  ],
+  "blocks": [
+    {
+      "type": "style_card",
+      "name": "Category card",
+      "settings": [
+        { "type": "header", "content": "Media" },
+        { "type": "image_picker", "id": "image", "label": "Image", "info": "The image automatically fills the media area. Use a transparent PNG or WebP when you want the desktop image to blend into the L-shaped card." },
+        { "type": "text", "id": "image_alt", "label": "Image alt text", "info": "Uses the card heading when left blank." },
+
+        { "type": "header", "content": "Content" },
+        { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Category" },
+        { "type": "range", "id": "heading_size", "label": "Heading size", "min": 20, "max": 46, "step": 2, "unit": "px", "default": 30 },
+        { "type": "text", "id": "tags", "label": "Tags", "default": "Feature one, Feature two, Feature three", "info": "Separate tags with commas." },
+        { "type": "richtext", "id": "description", "label": "Description", "default": "<p>Introduce this category and help customers understand what makes it different.</p>" },
+        { "type": "text", "id": "link_label", "label": "Link label", "default": "Explore category" },
+        { "type": "url", "id": "link", "label": "Link" },
+        { "type": "checkbox", "id": "show_arrow", "label": "Show arrow", "default": true },
+        { "type": "text_alignment", "id": "text_alignment", "label": "Text alignment", "default": "left" },
+
+        { "type": "header", "content": "Colors" },
+        { "type": "color", "id": "card_background", "label": "Card background", "default": "#fff3f2" },
+        { "type": "color", "id": "text_color", "label": "Text color", "default": "#221d20" },
+        { "type": "color", "id": "accent_color", "label": "Accent color", "default": "#e98998" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Category selector",
+      "blocks": [
+        {
+          "type": "style_card",
+          "settings": {
+            "heading": "Category one",
+            "tags": "Feature one, Feature two, Feature three",
+            "description": "<p>Introduce the category with a short, useful description.</p>",
+            "link_label": "Explore category",
+            "card_background": "#fff3f2",
+            "text_color": "#221d20",
+            "accent_color": "#e98998"
+          }
+        },
+        {
+          "type": "style_card",
+          "settings": {
+            "heading": "Category two",
+            "tags": "Feature one, Feature two, Feature three",
+            "description": "<p>Use the same layout for products, collections, services, or editorial topics.</p>",
+            "link_label": "Explore category",
+            "card_background": "#f4f8e8",
+            "text_color": "#1f2118",
+            "accent_color": "#76a52d"
+          }
+        }
+      ]
+    }
+  ],
+  "disabled_on": { "groups": ["header", "footer", "custom.overlay"] }
+}
+{% endschema %}

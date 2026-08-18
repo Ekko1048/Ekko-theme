@@ -1,0 +1,205 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.full_width
+    assign frame_class = 'page-width page-width--full'
+  endif
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    --ekko-scrollspy-extra-offset: 0px;
+    --ekko-scrollspy-float-gap: 12px;
+    position: sticky;
+    inset-block-start: var(--ekko-scrollspy-sticky-top, var(--sticky-header-height, 0px));
+    z-index: 30;
+    height: 0;
+    pointer-events: none;
+    {%- render 'section-variables', section: section -%}
+  }
+{% endstyle %}
+
+<div class="ekko-scrollspy-section">
+  <div
+    class="ekko-scrollspy__frame {{ frame_class }}"
+    data-width="{% if section.settings.full_width %}full{% else %}page{% endif %}"
+    data-align="{{ section.settings.alignment }}"
+    data-align-mobile="{{ section.settings.alignment_mobile }}"
+  >
+    <ekko-scrollspy
+      class="ekko-scrollspy"
+      data-highlight="{{ section.settings.show_highlight }}"
+      aria-label="{{ section.settings.accessibility_label | escape }}"
+    >
+      <nav class="ekko-scrollspy__nav" aria-label="{{ section.settings.accessibility_label | escape }}">
+        {%- for block in section.blocks -%}
+          {%- if block.type == 'back_to_top' -%}
+            <button
+              class="ekko-scrollspy__item ekko-scrollspy__top"
+              type="button"
+              data-back-to-top
+              aria-label="{{ block.settings.title | escape }}"
+              {{ block.shopify_attributes }}
+            >
+              {%- render 'icon', icon: 'arrow-down', size: 'sm', class: 'ekko-scrollspy__top-icon' -%}
+            </button>
+          {%- endif -%}
+        {%- endfor -%}
+
+        <div class="ekko-scrollspy__links ekko-paint-layer">
+          {%- for block in section.blocks -%}
+            {%- if block.type == 'item' -%}
+              {%- assign target_ids = block.settings.target_id | split: ',' -%}
+              {%- assign first_target = target_ids.first | strip | remove_first: '#' -%}
+              {%- if block.settings.title != blank and first_target != blank -%}
+                <a
+                  class="ekko-scrollspy__item"
+                  href="#{{ first_target | escape }}"
+                  data-scrollspy-link
+                  data-target="{{ block.settings.target_id | strip | escape }}"
+                  {{ block.shopify_attributes }}
+                >
+                  <span>{{ block.settings.title | escape }}</span>
+                </a>
+              {%- endif -%}
+            {%- endif -%}
+          {%- endfor -%}
+        </div>
+      </nav>
+    </ekko-scrollspy>
+  </div>
+</div>
+
+{% stylesheet %}
+  .ekko-scrollspy-section {
+    height: 0;
+    min-height: 0;
+    color: rgb(var(--color-foreground));
+  }
+  .ekko-scrollspy__frame {
+    display: flex;
+    min-width: 0;
+    pointer-events: none;
+  }
+  .ekko-scrollspy__frame[data-align='left'] { justify-content: flex-start; }
+  .ekko-scrollspy__frame[data-align='center'] { justify-content: center; }
+  .ekko-scrollspy__frame[data-align='right'] { justify-content: flex-end; }
+  .ekko-scrollspy {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    margin-block-start: var(--ekko-scrollspy-float-gap);
+    pointer-events: auto;
+  }
+  .ekko-scrollspy__nav {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    max-width: 100%;
+    padding: .25rem;
+    border-radius: 999px;
+    color: rgb(var(--color-foreground));
+    background: var(--gradient-background, rgb(var(--color-background)));
+    transition: box-shadow 240ms ease;
+  }
+  .ekko-scrollspy[data-stuck] .ekko-scrollspy__nav {
+    box-shadow: 0 .75rem 2rem rgb(0 0 0 / .1);
+  }
+  .ekko-scrollspy__links {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: inline proximity;
+    scrollbar-width: none;
+  }
+  .ekko-scrollspy__links::-webkit-scrollbar { display: none; }
+  .ekko-scrollspy__item {
+    position: relative;
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.25rem;
+    min-height: 2.25rem;
+    border: 0;
+    border-radius: 999px;
+    padding: .55rem 1.15rem;
+    color: inherit;
+    background: transparent;
+    font: inherit;
+    font-size: .9375rem;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    touch-action: manipulation;
+    scroll-snap-align: center;
+    transition: color 220ms ease, background-color 220ms ease;
+  }
+  .ekko-scrollspy__item:hover { background: rgb(var(--color-foreground) / .08); }
+  .ekko-scrollspy[data-highlight='true'] .ekko-scrollspy__item[aria-current='location'] {
+    color: rgb(var(--color-background));
+    background: rgb(var(--color-foreground));
+  }
+  .ekko-scrollspy__item:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -4px;
+  }
+  .ekko-scrollspy__top {
+    padding: 0;
+    margin-inline-end: .15rem;
+  }
+  .ekko-scrollspy__top-icon {
+    width: 1.125rem;
+    transform: rotate(180deg);
+  }
+  @media screen and (max-width: 749px) {
+    .ekko-scrollspy { margin-block-start: .5rem; }
+    .ekko-scrollspy__frame[data-align-mobile='left'] { justify-content: flex-start; }
+    .ekko-scrollspy__frame[data-align-mobile='center'] { justify-content: center; }
+    .ekko-scrollspy__frame[data-align-mobile='right'] { justify-content: flex-end; }
+    .ekko-scrollspy__nav { max-width: 100%; padding: .1875rem; }
+    .ekko-scrollspy__item {
+      min-width: 2.125rem;
+      min-height: 2.125rem;
+      padding: .5rem .9rem;
+      font-size: .8125rem;
+    }
+    .ekko-scrollspy__top { padding: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-scrollspy__item, .ekko-scrollspy__nav { transition: none; }
+    .ekko-scrollspy__links { scroll-behavior: auto; }
+  }
+{% endstylesheet %}
+
+<script src="{{ 'ekko-scrollspy.js' | asset_url }}" defer="defer"></script>
+
+{% schema %}
+{
+  "name": "Scrollspy navigation",
+  "max_blocks": 10,
+  "settings": [
+    { "type": "header", "content": "Display" },
+    { "type": "checkbox", "id": "show_highlight", "label": "Show active section highlight", "default": true },
+    { "type": "select", "id": "alignment", "label": "Desktop content alignment", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "select", "id": "alignment_mobile", "label": "Mobile content alignment", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "checkbox", "id": "full_width", "label": "Make section full width", "default": false },
+    { "type": "text", "id": "accessibility_label", "label": "Accessibility label", "default": "On this page" },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "color_text", "label": "Text", "default": "#171717" },
+    { "type": "color", "id": "color_background", "label": "Background", "default": "#f1f1f1" },
+    { "type": "color_background", "id": "gradient_background", "label": "Background gradient" }
+  ],
+  "blocks": [
+    { "type": "item", "name": "Navigation item", "settings": [{ "type": "text", "id": "title", "label": "Title", "default": "Overview" }, { "type": "textarea", "id": "target_id", "label": "Target section ID", "info": "Enter the section ID shown in the template JSON. Do not include #. Separate multiple IDs with commas." }] },
+    { "type": "back_to_top", "name": "Back to top", "limit": 1, "settings": [{ "type": "text", "id": "title", "label": "Accessibility label", "default": "Back to top" }] }
+  ],
+  "presets": [{ "name": "Scrollspy navigation", "blocks": [{ "type": "back_to_top" }, { "type": "item" }, { "type": "item" }, { "type": "item" }] }],
+  "disabled_on": { "groups": ["header", "footer", "custom.overlay"] }
+}
+{% endschema %}

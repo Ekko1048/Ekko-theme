@@ -1,0 +1,544 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+
+  assign tile_background = 'transparent'
+  if section.settings.show_tile_background
+    assign tile_background = section.settings.tile_background
+  endif
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    --section-padding-top: {{ section.settings.padding_top }}px;
+    --section-padding-bottom: {{ section.settings.padding_bottom }}px;
+    --ekko-logo-custom-width: {{ section.settings.custom_content_width }}vw;
+    --ekko-logo-columns: {{ section.settings.columns_desktop }};
+    --ekko-logo-columns-mobile: {{ section.settings.columns_mobile }};
+    --ekko-logo-gap: {{ section.settings.gap_desktop }}px;
+    --ekko-logo-gap-mobile: {{ section.settings.gap_mobile }}px;
+    --ekko-logo-height: {{ section.settings.logo_height_desktop }}px;
+    --ekko-logo-height-mobile: {{ section.settings.logo_height_mobile }}px;
+    --ekko-logo-heading-gap: {{ section.settings.heading_gap }}px;
+    --ekko-logo-heading-gap-mobile: {{ section.settings.heading_gap_mobile }}px;
+    --ekko-logo-radius: {{ section.settings.tile_radius }}px;
+    --ekko-logo-tile-background: {{ tile_background }};
+    {%- render 'section-variables', section: section -%}
+  }
+{% endstyle %}
+
+<section class="section section--padding ekko-logo-list-section{% if section.settings.divider %} section--divider{% endif %}{% if section.settings.rounded %} section--rounded{% endif %}">
+  <div class="ekko-logo-list__frame ekko-paint-layer {{ frame_class }}" data-width="{{ section.settings.content_width }}">
+    {%- if section.settings.subheading != blank or section.settings.heading != blank or section.settings.description != blank -%}
+      <header class="ekko-logo-list__header" data-align="{{ section.settings.heading_alignment }}">
+        {%- if section.settings.subheading != blank -%}<p class="ekko-logo-list__subheading">{{ section.settings.subheading | escape }}</p>{%- endif -%}
+        {%- if section.settings.heading != blank -%}<{{ section.settings.heading_tag }} class="heading {{ section.settings.heading_size }}">{{ section.settings.heading }}</{{ section.settings.heading_tag }}>{%- endif -%}
+        {%- if section.settings.description != blank -%}<div class="ekko-logo-list__description rte">{{ section.settings.description }}</div>{%- endif -%}
+      </header>
+    {%- endif -%}
+
+    {%- if section.blocks.size > 0 -%}
+      <ekko-logo-list
+        class="ekko-logo-list"
+        data-desktop-layout="{{ section.settings.desktop_layout }}"
+        data-desktop-overflow="{{ section.settings.desktop_overflow }}"
+        data-desktop-visible="{{ section.settings.visible_desktop }}"
+        data-mobile-layout="{{ section.settings.mobile_layout }}"
+        data-mobile-item-width="{{ section.settings.mobile_item_width }}"
+        data-direction="{{ section.settings.marquee_direction }}"
+        data-speed="{{ section.settings.marquee_speed }}"
+        data-pause-hover="{{ section.settings.pause_on_hover }}"
+        data-navigation="{{ section.settings.show_navigation }}"
+        data-logo-mode="{{ section.settings.logo_color_mode }}"
+        data-restore-color="{{ section.settings.restore_color_on_hover }}"
+        data-last-row="{{ section.settings.last_row_alignment }}"
+      >
+        <div class="ekko-logo-list__viewport" id="LogoListViewport-{{ section.id }}" data-logo-viewport>
+          <div class="ekko-logo-list__track" data-logo-track>
+            <div class="ekko-logo-list__group" data-logo-group>
+              {% content_for 'blocks' %}
+            </div>
+          </div>
+        </div>
+
+        <div class="ekko-logo-list__controls" data-logo-controls>
+          <button type="button" data-logo-previous aria-controls="LogoListViewport-{{ section.id }}" aria-label="{{ 'general.pagination.previous' | t | escape }}">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M12.75 3.75 6.5 10l6.25 6.25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" data-logo-next aria-controls="LogoListViewport-{{ section.id }}" aria-label="{{ 'general.pagination.next' | t | escape }}">
+            <svg viewBox="0 0 20 20" aria-hidden="true"><path d="m7.25 3.75 6.25 6.25-6.25 6.25" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </ekko-logo-list>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .ekko-logo-list-section {
+    color: rgb(var(--color-foreground));
+    background: var(--gradient-background, rgb(var(--color-background)));
+    overflow: clip;
+  }
+
+  .ekko-logo-list__frame {
+    min-width: 0;
+  }
+
+  .ekko-logo-list__header {
+    display: grid;
+    width: min(100%, 48rem);
+    gap: .85rem;
+    margin-block-end: var(--ekko-logo-heading-gap);
+  }
+
+  .ekko-logo-list__header[data-align='left'] {
+    margin-inline-end: auto;
+    text-align: start;
+  }
+
+  .ekko-logo-list__header[data-align='center'] {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .ekko-logo-list__header[data-align='right'] {
+    margin-inline-start: auto;
+    text-align: end;
+  }
+
+  .ekko-logo-list__header .heading,
+  .ekko-logo-list__subheading,
+  .ekko-logo-list__description {
+    margin: 0;
+  }
+
+  .ekko-logo-list__subheading {
+    font-size: .75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .ekko-logo-list__description {
+    line-height: 1.6;
+    opacity: .72;
+  }
+
+  .ekko-logo-list {
+    position: relative;
+    display: block;
+    min-width: 0;
+  }
+
+  .ekko-logo-list__viewport {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .ekko-logo-list__track,
+  .ekko-logo-list__group {
+    display: flex;
+    min-width: 0;
+    gap: var(--ekko-logo-gap);
+  }
+
+  .ekko-logo-list__track {
+    width: 100%;
+  }
+
+  .ekko-logo-list__group {
+    flex: 0 0 100%;
+    flex-wrap: wrap;
+    justify-content: var(--ekko-logo-last-row, center);
+  }
+
+  .ekko-logo-list__group > .shopify-block {
+    min-width: 0;
+    flex: 0 0 calc((100% - (var(--ekko-logo-columns) - 1) * var(--ekko-logo-gap)) / var(--ekko-logo-columns));
+  }
+
+  .ekko-logo-list__viewport[data-mode='scroll'] {
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scroll-behavior: smooth;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: none;
+  }
+
+  .ekko-logo-list__viewport[data-mode='scroll']::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ekko-logo-list__viewport[data-mode='scroll'] .ekko-logo-list__track,
+  .ekko-logo-list__viewport[data-mode='clipped'] .ekko-logo-list__track,
+  .ekko-logo-list__viewport[data-mode='marquee'] .ekko-logo-list__track {
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .ekko-logo-list__viewport[data-mode='scroll'] .ekko-logo-list__group,
+  .ekko-logo-list__viewport[data-mode='clipped'] .ekko-logo-list__group,
+  .ekko-logo-list__viewport[data-mode='marquee'] .ekko-logo-list__group {
+    width: max-content;
+    min-width: 0;
+    flex-basis: auto;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+
+  .ekko-logo-list__viewport[data-mode='scroll'] .ekko-logo-list__group > .shopify-block,
+  .ekko-logo-list__viewport[data-mode='clipped'] .ekko-logo-list__group > .shopify-block,
+  .ekko-logo-list__viewport[data-mode='marquee'] .ekko-logo-list__group > .shopify-block {
+    flex: 0 0 var(--ekko-logo-item-width);
+    width: var(--ekko-logo-item-width);
+  }
+
+  .ekko-logo-list__viewport[data-mode='scroll'] .ekko-logo-list__group > .shopify-block {
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
+  .ekko-logo-list__viewport[data-mode='clipped'],
+  .ekko-logo-list__viewport[data-mode='marquee'] {
+    overflow: hidden;
+  }
+
+  .ekko-logo-list[data-last-row='left'] { --ekko-logo-last-row: flex-start; }
+  .ekko-logo-list[data-last-row='center'] { --ekko-logo-last-row: center; }
+  .ekko-logo-list[data-last-row='right'] { --ekko-logo-last-row: flex-end; }
+
+  .ekko-logo-list__viewport[data-mode='marquee'][data-ready='true'] .ekko-logo-list__track {
+    animation: ekko-logo-marquee-left var(--ekko-logo-marquee-duration) linear infinite;
+    will-change: transform;
+  }
+
+  .ekko-logo-list[data-direction='right'] .ekko-logo-list__viewport[data-mode='marquee'][data-ready='true'] .ekko-logo-list__track {
+    animation-name: ekko-logo-marquee-right;
+  }
+
+  .ekko-logo-list[data-pause-hover='true']:hover .ekko-logo-list__viewport[data-mode='marquee'] .ekko-logo-list__track,
+  .ekko-logo-list:focus-within .ekko-logo-list__viewport[data-mode='marquee'] .ekko-logo-list__track,
+  .ekko-logo-list.is-touch-paused .ekko-logo-list__viewport[data-mode='marquee'] .ekko-logo-list__track {
+    animation-play-state: paused;
+  }
+
+  @keyframes ekko-logo-marquee-left {
+    to { transform: translate3d(calc(var(--ekko-logo-loop-distance) * -1), 0, 0); }
+  }
+
+  @keyframes ekko-logo-marquee-right {
+    from { transform: translate3d(calc(var(--ekko-logo-loop-distance) * -1), 0, 0); }
+    to { transform: translate3d(0, 0, 0); }
+  }
+
+  .ekko-logo-list__controls {
+    display: none;
+    justify-content: center;
+    gap: .6rem;
+    margin-block-start: 1.25rem;
+  }
+
+  .ekko-logo-list__controls button {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    color: rgb(var(--color-foreground));
+    background: rgb(var(--color-foreground) / .08);
+    cursor: pointer;
+    transition: color 180ms ease, background 180ms ease, opacity 180ms ease;
+  }
+
+  .ekko-logo-list__controls button svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .ekko-logo-list__controls button:disabled {
+    cursor: default;
+    opacity: .32;
+  }
+
+  @media (hover: hover) {
+    .ekko-logo-list__controls button:not(:disabled):hover {
+      color: rgb(var(--color-background));
+      background: rgb(var(--color-foreground));
+    }
+  }
+
+  @media screen and (min-width: 750px) {
+    .ekko-logo-list__frame[data-width='custom'] {
+      width: min(100%, var(--ekko-logo-custom-width));
+      max-width: var(--ekko-logo-custom-width);
+      margin-inline: auto;
+    }
+
+    .ekko-logo-list[data-desktop-layout='single'][data-desktop-overflow='scroll'][data-navigation='true'] .ekko-logo-list__controls {
+      display: flex;
+    }
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-logo-list__header {
+      margin-block-end: var(--ekko-logo-heading-gap-mobile);
+    }
+
+    .ekko-logo-list__track,
+    .ekko-logo-list__group {
+      gap: var(--ekko-logo-gap-mobile);
+    }
+
+    .ekko-logo-list__group > .shopify-block {
+      flex-basis: calc((100% - (var(--ekko-logo-columns-mobile) - 1) * var(--ekko-logo-gap-mobile)) / var(--ekko-logo-columns-mobile));
+    }
+
+    .ekko-logo-list__controls {
+      display: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-logo-list__viewport[data-mode='marquee'] .ekko-logo-list__track {
+      animation: none !important;
+      transform: none !important;
+      will-change: auto;
+    }
+
+    .ekko-logo-list__group--clone {
+      display: none;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('ekko-logo-list')) {
+    customElements.define('ekko-logo-list', class extends HTMLElement {
+      connectedCallback() {
+        this.viewport = this.querySelector('[data-logo-viewport]');
+        this.track = this.querySelector('[data-logo-track]');
+        this.group = this.querySelector('[data-logo-group]');
+        this.previousButton = this.querySelector('[data-logo-previous]');
+        this.nextButton = this.querySelector('[data-logo-next]');
+        if (!this.viewport || !this.track || !this.group) return;
+
+        this.updateBound = this.scheduleUpdate.bind(this);
+        this.scrollBound = this.updateButtons.bind(this);
+        this.previousBound = () => this.move(-1);
+        this.nextBound = () => this.move(1);
+        this.blockSelectBound = this.onBlockSelect.bind(this);
+        this.pointerDownBound = this.pauseForTouch.bind(this);
+
+        this.previousButton?.addEventListener('click', this.previousBound);
+        this.nextButton?.addEventListener('click', this.nextBound);
+        this.viewport.addEventListener('scroll', this.scrollBound, { passive: true });
+        this.addEventListener('shopify:block:select', this.blockSelectBound);
+        this.addEventListener('pointerdown', this.pointerDownBound, { passive: true });
+        window.addEventListener('resize', this.updateBound, { passive: true });
+
+        this.resizeObserver = new ResizeObserver(this.updateBound);
+        this.resizeObserver.observe(this.viewport);
+        this.scheduleUpdate();
+      }
+
+      disconnectedCallback() {
+        cancelAnimationFrame(this.updateFrame);
+        clearTimeout(this.touchTimer);
+        this.resizeObserver?.disconnect();
+        this.previousButton?.removeEventListener('click', this.previousBound);
+        this.nextButton?.removeEventListener('click', this.nextBound);
+        this.viewport?.removeEventListener('scroll', this.scrollBound);
+        this.removeEventListener('shopify:block:select', this.blockSelectBound);
+        this.removeEventListener('pointerdown', this.pointerDownBound);
+        window.removeEventListener('resize', this.updateBound);
+      }
+
+      scheduleUpdate() {
+        cancelAnimationFrame(this.updateFrame);
+        this.updateFrame = requestAnimationFrame(() => this.update());
+      }
+
+      update() {
+        const desktop = window.matchMedia('(min-width: 750px)').matches;
+        let mode;
+        if (desktop) {
+          mode = this.dataset.desktopLayout === 'stacked' ? 'stacked' : this.dataset.desktopOverflow;
+        } else {
+          mode = this.dataset.mobileLayout;
+        }
+
+        this.cleanupRuntimeCopies();
+        this.viewport.dataset.mode = mode;
+        const gap = parseFloat(getComputedStyle(this.group).gap) || 0;
+        let itemWidth;
+        if (desktop) {
+          const visible = Math.max(1, Number(this.dataset.desktopVisible) || 5);
+          itemWidth = (this.viewport.clientWidth - gap * (visible - 1)) / visible;
+        } else {
+          const widthPercent = Math.max(20, Number(this.dataset.mobileItemWidth) || 44);
+          itemWidth = this.viewport.clientWidth * widthPercent / 100;
+        }
+        this.style.setProperty('--ekko-logo-item-width', `${Math.max(1, itemWidth)}px`);
+
+        const originals = Array.from(this.group.children);
+        originals.forEach((item, index) => {
+          item.hidden = mode === 'clipped' && desktop && index >= Number(this.dataset.desktopVisible);
+        });
+
+        if (mode === 'marquee') {
+          this.prepareMarquee();
+        } else {
+          this.viewport.removeAttribute('data-ready');
+          this.track.style.removeProperty('--ekko-logo-loop-distance');
+          this.track.style.removeProperty('--ekko-logo-marquee-duration');
+        }
+
+        this.updateButtons();
+      }
+
+      cleanupRuntimeCopies() {
+        this.querySelectorAll('[data-logo-runtime-copy]').forEach((copy) => copy.remove());
+        Array.from(this.group?.children || []).forEach((item) => { item.hidden = false; });
+      }
+
+      prepareMarquee() {
+        const sourceItems = Array.from(this.group.children);
+        if (!sourceItems.length) return;
+
+        let passes = 0;
+        while (this.group.scrollWidth < this.viewport.clientWidth * 1.15 && passes < 8) {
+          sourceItems.forEach((item) => {
+            const copy = item.cloneNode(true);
+            copy.dataset.logoRuntimeCopy = '';
+            copy.setAttribute('aria-hidden', 'true');
+            copy.querySelectorAll('a, button, input, select, textarea').forEach((control) => control.setAttribute('tabindex', '-1'));
+            copy.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+            this.group.appendChild(copy);
+          });
+          passes += 1;
+        }
+
+        const groupCopy = this.group.cloneNode(true);
+        groupCopy.dataset.logoRuntimeCopy = '';
+        groupCopy.classList.add('ekko-logo-list__group--clone');
+        groupCopy.setAttribute('aria-hidden', 'true');
+        groupCopy.querySelectorAll('a, button, input, select, textarea').forEach((control) => control.setAttribute('tabindex', '-1'));
+        groupCopy.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+        this.track.appendChild(groupCopy);
+
+        const gap = parseFloat(getComputedStyle(this.track).gap) || 0;
+        const distance = this.group.getBoundingClientRect().width + gap;
+        const speed = Math.max(10, Number(this.dataset.speed) || 50);
+        this.track.style.setProperty('--ekko-logo-loop-distance', `${distance}px`);
+        this.track.style.setProperty('--ekko-logo-marquee-duration', `${distance / speed}s`);
+        this.viewport.dataset.ready = 'true';
+      }
+
+      move(direction) {
+        this.viewport.scrollBy({ left: direction * this.viewport.clientWidth * .82, behavior: 'smooth' });
+      }
+
+      updateButtons() {
+        if (!this.previousButton || !this.nextButton) return;
+        const max = Math.max(0, this.viewport.scrollWidth - this.viewport.clientWidth - 2);
+        this.previousButton.disabled = this.viewport.scrollLeft <= 2;
+        this.nextButton.disabled = this.viewport.scrollLeft >= max;
+      }
+
+      onBlockSelect(event) {
+        const item = event.target.closest('.shopify-block');
+        if (!item || !this.group.contains(item)) return;
+        if (this.viewport.dataset.mode === 'scroll') {
+          const left = item.offsetLeft - (this.viewport.clientWidth - item.offsetWidth) / 2;
+          this.viewport.scrollTo({ left: Math.max(0, left), behavior: 'smooth' });
+        }
+        if (this.viewport.dataset.mode === 'marquee') this.classList.add('is-touch-paused');
+      }
+
+      pauseForTouch(event) {
+        if (this.viewport.dataset.mode !== 'marquee' || event.pointerType === 'mouse') return;
+        clearTimeout(this.touchTimer);
+        this.classList.add('is-touch-paused');
+        this.touchTimer = setTimeout(() => this.classList.remove('is-touch-paused'), 1800);
+      }
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.logo_list.name",
+  "max_blocks": 30,
+  "blocks": [{ "type": "_logo-list-item" }],
+  "settings": [
+    { "type": "header", "content": "t:sections.logo_list.settings.layout_header" },
+    { "type": "select", "id": "content_width", "label": "t:sections.logo_list.settings.content_width", "options": [{ "value": "page", "label": "t:sections.logo_list.options.page_width" }, { "value": "full", "label": "t:sections.logo_list.options.full_width" }, { "value": "custom", "label": "t:sections.logo_list.options.custom" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "t:sections.logo_list.settings.custom_content_width", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+    { "type": "select", "id": "desktop_layout", "label": "t:sections.logo_list.settings.desktop_layout", "options": [{ "value": "stacked", "label": "t:sections.logo_list.options.stacked" }, { "value": "single", "label": "t:sections.logo_list.options.single_row" }], "default": "single" },
+    { "type": "range", "id": "columns_desktop", "label": "t:sections.logo_list.settings.columns_desktop", "min": 2, "max": 8, "step": 1, "default": 5, "visible_if": "{{ section.settings.desktop_layout == 'stacked' }}" },
+    { "type": "select", "id": "last_row_alignment", "label": "t:sections.logo_list.settings.last_row_alignment", "options": [{ "value": "left", "label": "t:sections.logo_list.options.left" }, { "value": "center", "label": "t:sections.logo_list.options.center" }, { "value": "right", "label": "t:sections.logo_list.options.right" }], "default": "center", "visible_if": "{{ section.settings.desktop_layout == 'stacked' }}" },
+    { "type": "range", "id": "visible_desktop", "label": "t:sections.logo_list.settings.visible_desktop", "min": 3, "max": 8, "step": 1, "default": 5, "visible_if": "{{ section.settings.desktop_layout == 'single' }}" },
+    { "type": "select", "id": "desktop_overflow", "label": "t:sections.logo_list.settings.desktop_overflow", "options": [{ "value": "scroll", "label": "t:sections.logo_list.options.carousel" }, { "value": "marquee", "label": "t:sections.logo_list.options.marquee" }, { "value": "clipped", "label": "t:sections.logo_list.options.clipped" }], "default": "scroll", "visible_if": "{{ section.settings.desktop_layout == 'single' }}" },
+    { "type": "checkbox", "id": "show_navigation", "label": "t:sections.logo_list.settings.show_navigation", "default": true, "visible_if": "{{ section.settings.desktop_layout == 'single' and section.settings.desktop_overflow == 'scroll' }}" },
+    { "type": "range", "id": "gap_desktop", "label": "t:sections.logo_list.settings.gap_desktop", "min": 0, "max": 64, "step": 4, "unit": "px", "default": 24 },
+    { "type": "range", "id": "logo_height_desktop", "label": "t:sections.logo_list.settings.logo_height_desktop", "min": 72, "max": 200, "step": 8, "unit": "px", "default": 120 },
+
+    { "type": "header", "content": "t:sections.logo_list.settings.mobile_header" },
+    { "type": "select", "id": "mobile_layout", "label": "t:sections.logo_list.settings.mobile_layout", "options": [{ "value": "stacked", "label": "t:sections.logo_list.options.stacked_grid" }, { "value": "scroll", "label": "t:sections.logo_list.options.swipe_row" }, { "value": "marquee", "label": "t:sections.logo_list.options.marquee" }], "default": "scroll" },
+    { "type": "select", "id": "columns_mobile", "label": "t:sections.logo_list.settings.columns_mobile", "options": [{ "value": "2", "label": "2" }, { "value": "3", "label": "3" }], "default": "2", "visible_if": "{{ section.settings.mobile_layout == 'stacked' }}" },
+    { "type": "range", "id": "mobile_item_width", "label": "t:sections.logo_list.settings.mobile_item_width", "min": 36, "max": 80, "step": 2, "unit": "%", "default": 44, "visible_if": "{{ section.settings.mobile_layout == 'scroll' or section.settings.mobile_layout == 'marquee' }}" },
+    { "type": "range", "id": "gap_mobile", "label": "t:sections.logo_list.settings.gap_mobile", "min": 0, "max": 32, "step": 2, "unit": "px", "default": 12 },
+    { "type": "range", "id": "logo_height_mobile", "label": "t:sections.logo_list.settings.logo_height_mobile", "min": 64, "max": 160, "step": 8, "unit": "px", "default": 96 },
+
+    { "type": "header", "content": "t:sections.logo_list.settings.marquee_header", "visible_if": "{{ section.settings.desktop_overflow == 'marquee' or section.settings.mobile_layout == 'marquee' }}" },
+    { "type": "select", "id": "marquee_direction", "label": "t:sections.logo_list.settings.marquee_direction", "options": [{ "value": "left", "label": "t:sections.logo_list.options.left" }, { "value": "right", "label": "t:sections.logo_list.options.right" }], "default": "left", "visible_if": "{{ section.settings.desktop_overflow == 'marquee' or section.settings.mobile_layout == 'marquee' }}" },
+    { "type": "range", "id": "marquee_speed", "label": "t:sections.logo_list.settings.marquee_speed", "info": "t:sections.logo_list.settings.marquee_speed_info", "min": 10, "max": 120, "step": 5, "default": 50, "visible_if": "{{ section.settings.desktop_overflow == 'marquee' or section.settings.mobile_layout == 'marquee' }}" },
+    { "type": "checkbox", "id": "pause_on_hover", "label": "t:sections.logo_list.settings.pause_on_hover", "default": true, "visible_if": "{{ section.settings.desktop_overflow == 'marquee' }}" },
+
+    { "type": "header", "content": "t:sections.logo_list.settings.style_header" },
+    { "type": "select", "id": "logo_color_mode", "label": "t:sections.logo_list.settings.logo_color_mode", "options": [{ "value": "original", "label": "t:sections.logo_list.options.original" }, { "value": "grayscale", "label": "t:sections.logo_list.options.grayscale" }, { "value": "muted", "label": "t:sections.logo_list.options.muted" }], "default": "original" },
+    { "type": "checkbox", "id": "restore_color_on_hover", "label": "t:sections.logo_list.settings.restore_color_on_hover", "default": true, "visible_if": "{{ section.settings.logo_color_mode != 'original' }}" },
+    { "type": "checkbox", "id": "show_tile_background", "label": "t:sections.logo_list.settings.show_tile_background", "default": false },
+    { "type": "color", "id": "tile_background", "label": "t:sections.logo_list.settings.tile_background", "default": "#f5f5f5", "visible_if": "{{ section.settings.show_tile_background }}" },
+    { "type": "range", "id": "tile_radius", "label": "t:sections.logo_list.settings.tile_radius", "min": 0, "max": 40, "step": 2, "unit": "px", "default": 16, "visible_if": "{{ section.settings.show_tile_background }}" },
+
+    { "type": "header", "content": "t:sections.logo_list.settings.heading_header" },
+    { "type": "text", "id": "subheading", "label": "t:sections.logo_list.settings.subheading", "default": "TRUSTED BY" },
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.logo_list.settings.heading", "default": "Brands that choose us" },
+    { "type": "richtext", "id": "description", "label": "t:sections.logo_list.settings.description" },
+    { "type": "select", "id": "heading_size", "label": "t:sections.logo_list.settings.heading_size", "options": [{ "value": "title-sm", "label": "t:sections.logo_list.options.small" }, { "value": "title-md", "label": "t:sections.logo_list.options.medium" }, { "value": "title-lg tracking-heading", "label": "t:sections.logo_list.options.large" }], "default": "title-md" },
+    { "type": "select", "id": "heading_alignment", "label": "t:sections.logo_list.settings.heading_alignment", "options": [{ "value": "left", "label": "t:sections.logo_list.options.left" }, { "value": "center", "label": "t:sections.logo_list.options.center" }, { "value": "right", "label": "t:sections.logo_list.options.right" }], "default": "center" },
+    { "type": "select", "id": "heading_tag", "label": "t:sections.logo_list.settings.heading_tag", "options": [{ "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }, { "value": "h4", "label": "H4" }, { "value": "div", "label": "Div" }], "default": "h2" },
+    { "type": "range", "id": "heading_gap", "label": "t:sections.logo_list.settings.heading_gap", "min": 0, "max": 64, "step": 4, "unit": "px", "default": 20 },
+    { "type": "range", "id": "heading_gap_mobile", "label": "t:sections.logo_list.settings.heading_gap_mobile", "min": 0, "max": 40, "step": 4, "unit": "px", "default": 12 },
+
+    { "type": "header", "content": "t:sections.logo_list.settings.section_header" },
+    { "type": "color", "id": "color_text", "label": "t:sections.logo_list.settings.text_color", "default": "#171717" },
+    { "type": "color", "id": "color_background", "label": "t:sections.logo_list.settings.background", "default": "#ffffff" },
+    { "type": "color_background", "id": "gradient_background", "label": "t:sections.logo_list.settings.background_gradient" },
+    { "type": "range", "id": "padding_top", "label": "t:sections.logo_list.settings.padding_top", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "t:sections.logo_list.settings.padding_bottom", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "checkbox", "id": "divider", "label": "t:sections.logo_list.settings.divider", "default": false },
+    { "type": "checkbox", "id": "rounded", "label": "t:sections.logo_list.settings.rounded", "default": false }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.logo_list.presets.name",
+      "blocks": [
+        { "type": "_logo-list-item" },
+        { "type": "_logo-list-item" },
+        { "type": "_logo-list-item" },
+        { "type": "_logo-list-item" },
+        { "type": "_logo-list-item" }
+      ]
+    }
+  ],
+  "disabled_on": { "groups": ["header", "footer", "custom.overlay"] }
+}
+{% endschema %}

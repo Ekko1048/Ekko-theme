@@ -1,0 +1,266 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+  assign contact_block = section.blocks | where: 'type', 'contact' | first
+  assign question_blocks = section.blocks | where: 'type', 'question'
+  assign faq_surface_background = section.settings.surface_background | default: '#f5f5f5'
+  assign faq_surface_text = section.settings.surface_text | default: '#171717'
+  assign faq_input_background = section.settings.input_background | default: '#ffffff'
+  assign faq_input_text = section.settings.input_text | default: '#171717'
+  assign with_gradient = false
+  if section.settings.gradient_highlight != blank
+    assign with_gradient = true
+  endif
+-%}
+
+{% style %}
+  #shopify-section-{{ section.id }} {
+    --section-padding-top: {{ section.settings.padding_top }}px;
+    --section-padding-bottom: {{ section.settings.padding_bottom }}px;
+    --ekko-faq-width: {{ section.settings.custom_content_width }}vw;
+    --ekko-faq-radius: {{ section.settings.item_radius }}px;
+    --ekko-faq-surface-background: {{ faq_surface_background }};
+    --ekko-faq-surface-text: {{ faq_surface_text }};
+    --ekko-faq-input-background: {{ faq_input_background }};
+    --ekko-faq-input-text: {{ faq_input_text }};
+    {%- render 'section-variables', section: section -%}
+  }
+{% endstyle %}
+
+<div class="section section--padding ekko-faq-section{% if section.settings.divider %} section--divider{% endif %}{% if section.settings.rounded %} section--rounded{% endif %}">
+  <div class="ekko-faq__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
+    {%- render 'section-heading', section: section -%}
+
+    <ekko-faq class="ekko-faq" data-style="{{ section.settings.style }}" data-single="{{ section.settings.single_open }}" data-has-contact="{% if contact_block != blank %}true{% else %}false{% endif %}" data-contact-position="{{ section.settings.contact_position }}">
+      <div class="ekko-faq__items ekko-paint-layer">
+        {%- assign question_index = 0 -%}
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'rich-text' -%}
+              <div class="ekko-faq__group" {{ block.shopify_attributes }}>
+                {%- if block.settings.heading != blank -%}
+                  <h3>{%- render 'highlighted-text', content: block.settings.heading, style: block.settings.highlighted_text, scribble: block.settings.highlighted_scribble, gradient: with_gradient -%}</h3>
+                {%- endif -%}
+                {%- if block.settings.text != blank -%}<div class="rte">{{ block.settings.text }}</div>{%- endif -%}
+              </div>
+
+            {%- when 'question' -%}
+              {%- assign question_index = question_index | plus: 1 -%}
+              <details class="ekko-faq__item" data-faq-item {% if section.settings.open_first and question_index == 1 %}open{% endif %} {{ block.shopify_attributes }}>
+                <summary class="ekko-faq__summary">
+                  <span>{%- render 'highlighted-text', content: block.settings.title, style: block.settings.highlighted_text, scribble: block.settings.highlighted_scribble, gradient: with_gradient -%}</span>
+                  <span class="ekko-faq__toggle" aria-hidden="true"></span>
+                </summary>
+                <div class="ekko-faq__answer rte">{{ block.settings.text }}</div>
+              </details>
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+
+      {%- if contact_block != blank -%}
+        {%- assign form_id = 'EkkoFaqContact-' | append: section.id -%}
+        {%- form 'contact', id: form_id, class: 'ekko-faq__contact' -%}
+          <div class="ekko-faq__contact-heading" {{ contact_block.shopify_attributes }}>
+            <div>
+              {%- if contact_block.settings.heading != blank -%}<h3>{%- render 'highlighted-text', content: contact_block.settings.heading, style: contact_block.settings.highlighted_text, scribble: contact_block.settings.highlighted_scribble, gradient: with_gradient -%}</h3>{%- endif -%}
+              {%- if contact_block.settings.text != blank -%}<div class="rte">{{ contact_block.settings.text }}</div>{%- endif -%}
+            </div>
+            {%- if contact_block.settings.avatar != blank -%}
+              {{ contact_block.settings.avatar | image_url: width: 240 | image_tag: loading: 'lazy', widths: '80, 120, 160, 240', sizes: '80px', class: 'ekko-faq__avatar' }}
+            {%- endif -%}
+          </div>
+
+          {%- if form.errors -%}
+            {%- capture form_errors -%}{{ form.errors | default_errors }}{%- endcapture -%}
+            {%- render 'alert', status: 'error', content: form_errors -%}
+          {%- endif -%}
+          {%- if form.posted_successfully? -%}
+            {%- assign success_message = 'contact.form.post_success' | t -%}
+            {%- render 'alert', status: 'success', content: success_message -%}
+          {%- endif -%}
+
+          <div class="ekko-faq__contact-fields">
+            <div class="ekko-faq__field">
+              <label for="FaqContactName-{{ section.id }}">{{ 'contact.form.name' | t }}</label>
+              <input class="input" autocomplete="name" type="text" id="FaqContactName-{{ section.id }}" name="contact[{{ 'contact.form.name' | t }}]" value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}">
+            </div>
+            <div class="ekko-faq__field">
+              <label for="FaqContactEmail-{{ section.id }}">{{ 'contact.form.email' | t }} <span aria-hidden="true">*</span></label>
+              <input class="input{% if form.errors contains 'email' %} invalid{% endif %}" autocomplete="email" type="email" id="FaqContactEmail-{{ section.id }}" name="contact[email]" spellcheck="false" autocapitalize="off" value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}" required>
+            </div>
+            {%- if contact_block.settings.show_phone -%}
+              <div class="ekko-faq__field">
+                <label for="FaqContactPhone-{{ section.id }}">{{ 'contact.form.phone' | t }}</label>
+                <input class="input" autocomplete="tel" type="tel" id="FaqContactPhone-{{ section.id }}" name="contact[{{ 'contact.form.phone' | t }}]" value="{% if form.phone %}{{ form.phone }}{% elsif customer %}{{ customer.phone }}{% endif %}">
+              </div>
+            {%- endif -%}
+            <div class="ekko-faq__field">
+              <label for="FaqContactMessage-{{ section.id }}">{{ 'contact.form.message' | t }}</label>
+              <textarea class="textarea" rows="4" id="FaqContactMessage-{{ section.id }}" name="contact[{{ 'contact.form.message' | t }}]">{{ form.body }}</textarea>
+            </div>
+            <button type="submit" class="button button--primary button--fixed" is="hover-button">
+              <span class="btn-fill" data-fill></span>
+              <span class="btn-text">{{ 'contact.form.send' | t }}</span>
+            </button>
+          </div>
+        {%- endform -%}
+      {%- endif -%}
+    </ekko-faq>
+  </div>
+</div>
+
+{%- if question_blocks.size > 0 -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {%- for block in question_blocks -%}
+          { "@type": "Question", "name": {{ block.settings.title | strip_html | json }}, "acceptedAnswer": { "@type": "Answer", "text": {{ block.settings.text | strip_html | json }} } }{% unless forloop.last %},{% endunless %}
+        {%- endfor -%}
+      ]
+    }
+  </script>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-faq-section { color: rgb(var(--color-foreground)); background: var(--gradient-background, rgb(var(--color-background))); }
+  .ekko-faq__frame { min-width: 0; }
+  .ekko-faq__frame > .title-wrapper { margin-block-end: clamp(1.5rem, 3vw, 3rem); }
+  .ekko-faq { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-areas: 'items'; gap: clamp(2rem, 5vw, 5rem); align-items: start; }
+  .ekko-faq[data-has-contact='true'] { grid-template-columns: minmax(0, 1fr) minmax(20rem, .42fr); grid-template-areas: 'items contact'; }
+  .ekko-faq[data-has-contact='true'][data-contact-position='left'] { grid-template-columns: minmax(20rem, .42fr) minmax(0, 1fr); grid-template-areas: 'contact items'; }
+  .ekko-faq__items { grid-area: items; min-width: 0; color: rgb(var(--color-foreground)); opacity: 1 !important; visibility: visible !important; }
+  .ekko-faq__group { display: grid; gap: .75rem; padding-block: 1.25rem 1.75rem; color: rgb(var(--color-foreground)); opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  .ekko-faq__group:first-child { padding-block-start: 0; }
+  .ekko-faq__group > * { opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  .ekko-faq__group:not(:first-child) { margin-block-start: 1.5rem; }
+  .ekko-faq__group h3,
+  .ekko-faq__contact h3 { margin: 0; font-family: var(--font-heading-family); font-size: clamp(1.5rem, 2.5vw, 2.25rem); line-height: 1.08; letter-spacing: -.025em; }
+  .ekko-faq__item { color: rgb(var(--color-foreground)); border-block-end: 1px solid rgb(var(--color-foreground) / .16); opacity: 1 !important; visibility: visible !important; }
+  .ekko-faq[data-style='cards'] .ekko-faq__item { margin-block-end: .75rem; border: 0; border-radius: var(--ekko-faq-radius); color: var(--ekko-faq-surface-text); background: var(--ekko-faq-surface-background); }
+  .ekko-faq__summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1.25rem; min-height: 4rem; padding-block: 1rem; font-size: clamp(1rem, 1.5vw, 1.25rem); font-weight: 600; line-height: 1.3; cursor: pointer; list-style: none; }
+  .ekko-faq__summary > span:first-child { display: block; min-width: 0; color: inherit; opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  .ekko-faq[data-style='cards'] .ekko-faq__summary { padding-inline: 1.25rem; }
+  .ekko-faq__summary::-webkit-details-marker { display: none; }
+  .ekko-faq__summary:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; border-radius: .25rem; }
+  .ekko-faq__toggle { position: relative; flex: 0 0 2.75rem; width: 2.75rem; height: 2.75rem; border-radius: 999px; background: rgb(var(--color-foreground) / .09); background: color-mix(in srgb, currentColor 9%, transparent); }
+  .ekko-faq__toggle::before,
+  .ekko-faq__toggle::after { content: ''; position: absolute; top: 50%; left: 50%; width: .875rem; height: 1.5px; background: currentColor; transform: translate(-50%, -50%); transition: transform 220ms ease; }
+  .ekko-faq__toggle::after { transform: translate(-50%, -50%) rotate(90deg); }
+  .ekko-faq__item[open] .ekko-faq__toggle::after { transform: translate(-50%, -50%) rotate(0); }
+  .ekko-faq__answer { padding: 0 4rem 1.5rem 0; line-height: 1.65; opacity: .78; }
+  .ekko-faq[data-style='cards'] .ekko-faq__answer { padding-inline: 1.25rem; }
+  .ekko-faq__contact { grid-area: contact; position: sticky; top: calc(var(--sticky-header-height, 0px) + 1.5rem); display: grid; gap: 1.5rem; padding: clamp(1.5rem, 3vw, 2.5rem); border-radius: var(--ekko-faq-radius); color: var(--ekko-faq-surface-text); background-color: var(--ekko-faq-surface-background); opacity: 1 !important; visibility: visible !important; }
+  .ekko-faq__contact-heading { display: flex; justify-content: space-between; gap: 1.25rem; align-items: start; }
+  .ekko-faq__contact-heading > div { display: grid; gap: .75rem; }
+  .ekko-faq__avatar { flex: 0 0 auto; width: 5rem; height: 5rem; object-fit: cover; border-radius: 999px; }
+  .ekko-faq__contact-fields { display: grid; gap: 1rem; }
+  .ekko-faq__field { display: grid; gap: .5rem; opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  .ekko-faq__field label { position: static; display: block; color: inherit; font-size: .875rem; font-weight: 650; opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  .ekko-faq__field :is(.input, .textarea) { display: block; width: 100%; min-height: 3rem; border-radius: .75rem; color: var(--ekko-faq-input-text); caret-color: var(--ekko-faq-input-text); background-color: var(--ekko-faq-input-background); box-shadow: inset 0 0 0 1px rgb(var(--color-foreground) / .14); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ekko-faq-surface-text) 14%, transparent); opacity: 1 !important; visibility: visible !important; transform: none !important; }
+  .ekko-faq__field :is(.input, .textarea):focus { border-color: transparent; background-color: var(--ekko-faq-input-background); box-shadow: inset 0 0 0 2px var(--ekko-faq-surface-text); outline: none; }
+  .ekko-faq__field .textarea { min-height: 8rem; resize: vertical; }
+  @media screen and (min-width: 750px) {
+    .ekko-faq__frame[data-width='custom'] { width: min(100%, var(--ekko-faq-width)); max-width: var(--ekko-faq-width); margin-inline: auto; }
+  }
+  @media screen and (max-width: 989px) {
+    .ekko-faq[data-has-contact='true'],
+    .ekko-faq[data-has-contact='true'][data-contact-position='left'] { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'items' 'contact'; }
+    .ekko-faq__contact { position: static; }
+  }
+  @media screen and (max-width: 749px) {
+    .ekko-faq__answer { padding-inline-end: 0; }
+    .ekko-faq__contact { padding: 1.25rem; }
+    .ekko-faq__contact .button { width: 100%; min-height: 3rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-faq__toggle::before, .ekko-faq__toggle::after { transition: none; }
+  }
+{% endstylesheet %}
+
+<script src="{{ 'ekko-faq.js' | asset_url }}" defer="defer"></script>
+{% comment %}
+<script>
+  if (!customElements.get('ekko-faq')) {
+    customElements.define('ekko-faq', class extends HTMLElement {
+      connectedCallback() {
+        this.onToggle = this.handleToggle.bind(this);
+        this.onEditorSelect = this.handleEditorSelect.bind(this);
+        this.addEventListener('toggle', this.onToggle, true);
+        this.addEventListener('shopify:block:select', this.onEditorSelect);
+      }
+      disconnectedCallback() {
+        this.removeEventListener('toggle', this.onToggle, true);
+        this.removeEventListener('shopify:block:select', this.onEditorSelect);
+      }
+      handleToggle(event) {
+        if (this.dataset.single !== 'true' || !event.target.matches('[data-faq-item]') || !event.target.open) return;
+        this.querySelectorAll('[data-faq-item][open]').forEach((item) => { if (item !== event.target) item.open = false; });
+      }
+      handleEditorSelect(event) {
+        const item = event.target.closest('[data-faq-item]');
+        if (item) item.open = true;
+      }
+    });
+  }
+</script>
+{% endcomment %}
+
+{% schema %}
+{
+  "name": "t:sections.faq.name",
+  "settings": [
+    { "type": "header", "content": "Layout" },
+    { "type": "select", "id": "style", "label": "t:sections.faq.settings.style.label", "options": [{ "value": "border", "label": "t:sections.faq.settings.style.options__1.label" }, { "value": "cards", "label": "t:sections.faq.settings.style.options__2.label" }], "default": "border" },
+    { "type": "select", "id": "contact_position", "label": "Contact form position", "options": [{ "value": "right", "label": "Right" }, { "value": "left", "label": "Left" }], "default": "right" },
+    { "type": "checkbox", "id": "single_open", "label": "Only keep one question open", "default": false },
+    { "type": "checkbox", "id": "open_first", "label": "Open first question", "default": false },
+    { "type": "range", "id": "item_radius", "label": "Card corner radius", "min": 0, "max": 32, "step": 2, "unit": "px", "default": 16 },
+    { "type": "select", "id": "content_width", "label": "Content width", "options": [{ "value": "page", "label": "Page width" }, { "value": "full", "label": "Full width" }, { "value": "custom", "label": "Custom" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "Custom content width", "min": 60, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+    { "type": "header", "content": "t:sections.global.settings.header__heading.content" },
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.global.settings.heading.label", "default": "Frequently asked questions" },
+    { "type": "select", "id": "heading_size", "label": "t:sections.global.settings.heading_size.label", "options": [{ "value": "title-sm", "label": "t:sections.global.settings.heading_size.options__1.label" }, { "value": "title-md", "label": "t:sections.global.settings.heading_size.options__2.label" }, { "value": "title-lg tracking-heading", "label": "t:sections.global.settings.heading_size.options__3.label" }, { "value": "title-xl tracking-heading", "label": "t:sections.global.settings.heading_size.options__4.label" }], "default": "title-md" },
+    { "type": "select", "id": "heading_alignment", "label": "t:sections.global.settings.heading_alignment.label", "options": [{ "value": "text-left md:items-end md:flex-row", "label": "t:sections.global.settings.heading_alignment.options__1.label" }, { "value": "text-center md:items-center", "label": "t:sections.global.settings.heading_alignment.options__2.label" }, { "value": "text-right md:items-end md:flex-row-reverse", "label": "t:sections.global.settings.heading_alignment.options__3.label" }], "default": "text-left md:items-end md:flex-row" },
+    { "type": "select", "id": "heading_tag", "label": "t:sections.global.settings.heading_tag.label", "options": [{ "value": "h1", "label": "H1" }, { "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }, { "value": "h4", "label": "H4" }, { "value": "div", "label": "Div" }], "default": "h2" },
+    { "type": "text", "id": "subheading", "label": "t:sections.global.settings.subheading.label" },
+    { "type": "richtext", "id": "description", "label": "t:sections.global.settings.description.label" },
+    { "type": "text", "id": "button_label", "label": "t:sections.global.settings.button_label.label" },
+    { "type": "url", "id": "button_link", "label": "t:sections.global.settings.button_link.label" },
+    { "type": "checkbox", "id": "button_external", "label": "t:sections.global.settings.button_external.label", "default": false, "visible_if": "{{ section.settings.button_label != blank }}" },
+    { "type": "checkbox", "id": "button_icon", "label": "t:sections.global.settings.button_icon.label", "default": true, "visible_if": "{{ section.settings.button_label != blank }}" },
+    { "type": "header", "content": "t:sections.global.settings.header__highlight.content" },
+    { "type": "select", "id": "highlighted_text", "label": "t:sections.global.settings.highlighted_text.label", "options": [{ "value": "none", "label": "t:sections.global.settings.highlighted_text.options__1.label" }, { "value": "text", "label": "t:sections.global.settings.highlighted_text.options__2.label" }, { "value": "full_text", "label": "t:sections.global.settings.highlighted_text.options__3.label" }, { "value": "half_text", "label": "t:sections.global.settings.highlighted_text.options__4.label" }, { "value": "underline", "label": "t:sections.global.settings.highlighted_text.options__5.label" }, { "value": "stencil", "label": "t:sections.global.settings.highlighted_text.options__6.label" }, { "value": "scribble", "label": "t:sections.global.settings.highlighted_text.options__7.label" }], "default": "none" },
+    { "type": "select", "id": "highlighted_scribble", "label": "t:sections.global.settings.highlighted_scribble.label", "options": [{ "value": "circle", "label": "t:sections.global.settings.highlighted_scribble.options__1.label" }, { "value": "basic-underline", "label": "t:sections.global.settings.highlighted_scribble.options__2.label" }, { "value": "sketch-underline", "label": "t:sections.global.settings.highlighted_scribble.options__3.label" }, { "value": "squiggle-underline", "label": "t:sections.global.settings.highlighted_scribble.options__4.label" }, { "value": "squiggle-underline-2", "label": "t:sections.global.settings.highlighted_scribble.options__5.label" }], "default": "circle", "visible_if": "{{ section.settings.highlighted_text == 'scribble' }}" },
+    { "type": "header", "content": "t:sections.global.settings.header__colors.content" },
+    { "type": "color", "id": "color_text", "label": "t:sections.global.settings.color_text.label", "default": "#171717" },
+    { "type": "color", "id": "color_background", "label": "t:sections.global.settings.color_background.label", "default": "#ffffff" },
+    { "type": "color_background", "id": "gradient_background", "label": "t:sections.global.settings.gradient_background.label" },
+    { "type": "color", "id": "color_highlight", "label": "t:sections.global.settings.color_highlight.label", "default": "#d7ff64" },
+    { "type": "color_background", "id": "gradient_highlight", "label": "t:sections.global.settings.gradient_highlight.label" },
+    { "type": "color", "id": "color_button_text", "label": "t:sections.global.settings.color_button_text.label" },
+    { "type": "color", "id": "color_button_background", "label": "t:sections.global.settings.color_button_background.label" },
+    { "type": "color_background", "id": "color_button_gradient", "label": "t:sections.global.settings.color_button_gradient.label" },
+    { "type": "header", "content": "Cards and form" },
+    { "type": "color", "id": "surface_background", "label": "Card background", "default": "#f5f5f5" },
+    { "type": "color", "id": "surface_text", "label": "Card text", "default": "#171717" },
+    { "type": "color", "id": "input_background", "label": "Input background", "default": "#ffffff" },
+    { "type": "color", "id": "input_text", "label": "Input text", "default": "#171717" },
+    { "type": "header", "content": "t:sections.global.settings.header__section.content" },
+    { "type": "range", "id": "padding_top", "label": "t:sections.global.settings.padding_top.label", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "t:sections.global.settings.padding_bottom.label", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "checkbox", "id": "divider", "label": "t:sections.global.settings.divider.label", "default": false },
+    { "type": "checkbox", "id": "rounded", "label": "t:sections.global.settings.rounded.label", "default": false }
+  ],
+  "blocks": [
+    { "type": "rich-text", "name": "t:sections.faq.blocks.rich_text.name", "settings": [{ "type": "inline_richtext", "id": "heading", "label": "t:sections.global.settings.heading.label", "default": "Orders and delivery" }, { "type": "richtext", "id": "text", "label": "t:sections.global.settings.text.label" }, { "type": "select", "id": "highlighted_text", "label": "t:sections.global.settings.highlighted_text.label", "options": [{ "value": "none", "label": "None" }, { "value": "text", "label": "Text" }, { "value": "full_text", "label": "Full text" }, { "value": "half_text", "label": "Half text" }, { "value": "underline", "label": "Underline" }, { "value": "stencil", "label": "Stencil" }, { "value": "scribble", "label": "Scribble" }], "default": "none" }, { "type": "select", "id": "highlighted_scribble", "label": "Scribble style", "options": [{ "value": "circle", "label": "Circle" }, { "value": "basic-underline", "label": "Basic underline" }, { "value": "sketch-underline", "label": "Sketch underline" }, { "value": "squiggle-underline", "label": "Squiggle underline" }, { "value": "squiggle-underline-2", "label": "Squiggle underline 2" }], "default": "circle", "visible_if": "{{ block.settings.highlighted_text == 'scribble' }}" }] },
+    { "type": "question", "name": "t:sections.faq.blocks.question.name", "settings": [{ "type": "inline_richtext", "id": "title", "label": "t:sections.global.settings.title.label", "default": "How long does shipping take?" }, { "type": "richtext", "id": "text", "label": "t:sections.global.settings.text.label", "default": "<p>Most orders are dispatched within two business days.</p>" }, { "type": "select", "id": "highlighted_text", "label": "t:sections.global.settings.highlighted_text.label", "options": [{ "value": "none", "label": "None" }, { "value": "text", "label": "Text" }, { "value": "full_text", "label": "Full text" }, { "value": "half_text", "label": "Half text" }, { "value": "underline", "label": "Underline" }, { "value": "stencil", "label": "Stencil" }, { "value": "scribble", "label": "Scribble" }], "default": "none" }, { "type": "select", "id": "highlighted_scribble", "label": "Scribble style", "options": [{ "value": "circle", "label": "Circle" }, { "value": "basic-underline", "label": "Basic underline" }, { "value": "sketch-underline", "label": "Sketch underline" }, { "value": "squiggle-underline", "label": "Squiggle underline" }, { "value": "squiggle-underline-2", "label": "Squiggle underline 2" }], "default": "circle", "visible_if": "{{ block.settings.highlighted_text == 'scribble' }}" }] },
+    { "type": "contact", "name": "t:sections.faq.blocks.contact.name", "limit": 1, "settings": [{ "type": "inline_richtext", "id": "heading", "label": "t:sections.global.settings.heading.label", "default": "Still have a question?" }, { "type": "richtext", "id": "text", "label": "t:sections.global.settings.text.label", "default": "<p>Send us a message and our team will help.</p>" }, { "type": "checkbox", "id": "show_phone", "label": "t:sections.faq.blocks.contact.settings.show_phone.label", "default": false }, { "type": "image_picker", "id": "avatar", "label": "t:sections.faq.blocks.contact.settings.avatar.label" }, { "type": "select", "id": "highlighted_text", "label": "t:sections.global.settings.highlighted_text.label", "options": [{ "value": "none", "label": "None" }, { "value": "text", "label": "Text" }, { "value": "full_text", "label": "Full text" }, { "value": "half_text", "label": "Half text" }, { "value": "underline", "label": "Underline" }, { "value": "stencil", "label": "Stencil" }, { "value": "scribble", "label": "Scribble" }], "default": "none" }, { "type": "select", "id": "highlighted_scribble", "label": "Scribble style", "options": [{ "value": "circle", "label": "Circle" }, { "value": "basic-underline", "label": "Basic underline" }, { "value": "sketch-underline", "label": "Sketch underline" }, { "value": "squiggle-underline", "label": "Squiggle underline" }, { "value": "squiggle-underline-2", "label": "Squiggle underline 2" }], "default": "circle", "visible_if": "{{ block.settings.highlighted_text == 'scribble' }}" }] }
+  ],
+  "presets": [{ "name": "t:sections.faq.presets.name", "blocks": [{ "type": "rich-text" }, { "type": "question" }, { "type": "question" }, { "type": "question" }] }],
+  "disabled_on": { "groups": ["header", "footer", "custom.overlay"] }
+}
+{% endschema %}

@@ -1,0 +1,315 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+-%}
+
+<style>
+  #shopify-section-{{ section.id }} {
+    --section-padding-top: {{ section.settings.padding_top }}px;
+    --section-padding-bottom: {{ section.settings.padding_bottom }}px;
+    --ekko-product-details-background: {{ section.settings.background_gradient | default: section.settings.background }};
+    --ekko-product-details-text: {{ section.settings.text_color }};
+    --ekko-product-details-surface: {{ section.settings.surface_color }};
+    --ekko-product-details-muted: {{ section.settings.muted_color }};
+    --ekko-product-details-sidebar-width: {{ section.settings.sidebar_width }}px;
+    --ekko-custom-content-width: {{ section.settings.custom_content_width }}vw;
+  }
+</style>
+
+<section
+  class="section section--padding ekko-product-details-section{% if section.settings.divider %} section--divider{% endif %}{% if section.settings.rounded %} section--rounded{% endif %}"
+>
+  <product-details-section
+    class="ekko-product-details__frame {{ frame_class }} ekko-content-frame"
+    data-content-width="{{ section.settings.content_width }}"
+    data-open-first="{{ section.settings.open_first_row }}"
+    data-single-open="{{ section.settings.single_open }}"
+  >
+    {%- if section.settings.heading != blank or section.settings.description != blank -%}
+      <header class="ekko-product-details__header">
+        {%- if section.settings.heading != blank -%}
+          <{{ section.settings.heading_tag }} class="ekko-product-details__heading">
+            {{- section.settings.heading | escape -}}
+          </{{ section.settings.heading_tag }}>
+        {%- endif -%}
+        {%- if section.settings.description != blank -%}
+          <div class="ekko-product-details__intro rte">{{ section.settings.description }}</div>
+        {%- endif -%}
+      </header>
+    {%- endif -%}
+
+    <div class="ekko-product-details__blocks">
+      {% content_for 'blocks' %}
+    </div>
+  </product-details-section>
+</section>
+
+{% stylesheet %}
+  .ekko-product-details-section {
+    overflow: clip;
+    color: var(--ekko-product-details-text);
+    background: var(--ekko-product-details-background);
+  }
+
+  .ekko-product-details-section::before {
+    background: inherit;
+  }
+
+  .ekko-product-details__frame {
+    display: block;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ekko-product-details__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: clamp(1.5rem, 4vw, 5rem);
+    margin-block-end: clamp(1.25rem, 2vw, 2.25rem);
+  }
+
+  .ekko-product-details__heading {
+    max-width: 16ch;
+    margin: 0;
+    font-size: clamp(2rem, 4vw, 4.75rem);
+    line-height: .95;
+    letter-spacing: -.045em;
+    text-wrap: balance;
+  }
+
+  .ekko-product-details__intro {
+    width: min(100%, 34rem);
+    color: color-mix(in srgb, var(--ekko-product-details-text) 70%, transparent);
+    font-size: clamp(1rem, 1.3vw, 1.25rem);
+  }
+
+  .ekko-product-details__intro > :first-child { margin-block-start: 0; }
+  .ekko-product-details__intro > :last-child { margin-block-end: 0; }
+
+  .ekko-product-details__blocks {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(18rem, var(--ekko-product-details-sidebar-width));
+    column-gap: clamp(1.5rem, 2.5vw, 3rem);
+    row-gap: 0;
+    align-items: start;
+  }
+
+  .ekko-product-details__blocks > .shopify-block {
+    min-width: 0;
+    grid-column: 1;
+  }
+
+  .ekko-product-details__blocks > .shopify-block:empty {
+    display: none;
+  }
+
+  .ekko-product-details__blocks > .shopify-block:not(:has(> .ekko-product-details__included))
+    + .shopify-block:not(:has(> .ekko-product-details__included)) {
+    margin-block-start: .625rem;
+  }
+
+  .ekko-product-details__blocks > .shopify-block:empty
+    + .shopify-block:not(:has(> .ekko-product-details__included)) {
+    margin-block-start: 0;
+  }
+
+  .ekko-product-details__blocks > .shopify-block:has(> .ekko-product-details__included) {
+    position: sticky;
+    top: calc(var(--header-height, 0px) + 1.5rem);
+    grid-column: 2;
+    grid-row: 1 / span 50;
+  }
+
+  @media screen and (max-width: 989px) {
+    .ekko-product-details__header {
+      display: grid;
+      align-items: start;
+      margin-block-end: 1.5rem;
+    }
+
+    .ekko-product-details__blocks {
+      grid-template-columns: minmax(0, 1fr);
+      gap: .625rem;
+    }
+
+    .ekko-product-details__blocks > .shopify-block,
+    .ekko-product-details__blocks > .shopify-block:has(> .ekko-product-details__included) {
+      position: static;
+      grid-column: 1;
+      grid-row: auto;
+      margin-block-start: 0;
+    }
+
+    .ekko-product-details__blocks > .shopify-block:has(> .ekko-product-details__included) {
+      /* The visible gap is this margin plus the grid gap, minus the 2.4rem tab overhang. */
+      margin-block-start: 2.5rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-product-details-section *,
+    .ekko-product-details-section *::before,
+    .ekko-product-details-section *::after {
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('product-details-section')) {
+    customElements.define('product-details-section', class ProductDetailsSection extends HTMLElement {
+      connectedCallback() {
+        this.details = [...this.querySelectorAll('.ekko-product-detail-row')];
+        this.specColumnCanvas = document.createElement('canvas');
+        this.specColumnContext = this.specColumnCanvas.getContext('2d');
+
+        if (this.dataset.openFirst === 'true' && !this.details.some((item) => item.open)) {
+          const firstVisible = this.details.find((item) => !item.hidden);
+          if (firstVisible) firstVisible.open = true;
+        }
+
+        this.addEventListener('toggle', this.onToggle, true);
+        this.addEventListener('shopify:block:select', this.onBlockSelect);
+
+        this.specResizeObserver = new ResizeObserver(() => this.syncSpecColumns());
+        this.specResizeObserver.observe(this);
+        requestAnimationFrame(() => this.syncSpecColumns());
+        document.fonts?.ready.then(() => {
+          if (this.isConnected) this.syncSpecColumns();
+        });
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('toggle', this.onToggle, true);
+        this.removeEventListener('shopify:block:select', this.onBlockSelect);
+        this.specResizeObserver?.disconnect();
+      }
+
+      onToggle = (event) => {
+        const current = event.target;
+        if (!current.matches('.ekko-product-detail-row')) return;
+
+        if (current.open) requestAnimationFrame(() => this.syncSpecColumns(current));
+        if (this.dataset.singleOpen !== 'true' || !current.open) return;
+
+        this.details.forEach((item) => {
+          if (item !== current) item.open = false;
+        });
+      };
+
+      onBlockSelect = (event) => {
+        const row = event.target.closest('.ekko-product-detail-row');
+        if (!row) return;
+        row.open = true;
+        requestAnimationFrame(() => {
+          this.syncSpecColumns(row);
+          event.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+      };
+
+      syncSpecColumns = (scope = this) => {
+        const tables = scope.matches?.('.ekko-product-detail-row__children')
+          ? [scope]
+          : [...scope.querySelectorAll('.ekko-product-detail-row__children')];
+
+        if (!window.matchMedia('(min-width: 360px) and (max-width: 749px)').matches) {
+          tables.forEach((table) => table.style.removeProperty('--ekko-pd-label-width'));
+          return;
+        }
+
+        tables.forEach((table) => {
+          if (!table.clientWidth || !this.specColumnContext) return;
+
+          const labels = [...table.querySelectorAll('.ekko-product-spec-row__label')];
+          let longestLabel = 0;
+
+          labels.forEach((label) => {
+            const style = getComputedStyle(label);
+            this.specColumnContext.font = style.font;
+            const text = label.textContent.trim();
+            const letterSpacing = Number.parseFloat(style.letterSpacing) || 0;
+            const measuredWidth = this.specColumnContext.measureText(text).width
+              + Math.max(0, text.length - 1) * letterSpacing;
+            longestLabel = Math.max(longestLabel, measuredWidth);
+          });
+
+          const maximumWidth = table.clientWidth * .4;
+          const sharedWidth = Math.min(Math.ceil(longestLabel) + 1, Math.floor(maximumWidth));
+          if (sharedWidth > 0) table.style.setProperty('--ekko-pd-label-width', `${sharedWidth}px`);
+        });
+      };
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Product details",
+  "blocks": [
+    { "type": "_product-details-description" },
+    { "type": "_product-details-collapsible" },
+    { "type": "_product-details-included" }
+  ],
+  "settings": [
+    { "type": "header", "content": "Heading" },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Product details" },
+    { "type": "select", "id": "heading_tag", "label": "Heading tag", "options": [{ "value": "h1", "label": "H1" }, { "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }], "default": "h2" },
+    { "type": "richtext", "id": "description", "label": "Description" },
+    { "type": "header", "content": "Layout" },
+    { "type": "range", "id": "sidebar_width", "label": "Included box width", "min": 280, "max": 480, "step": 10, "unit": "px", "default": 380 },
+    { "type": "checkbox", "id": "open_first_row", "label": "Open first collapsible row", "default": true },
+    { "type": "checkbox", "id": "single_open", "label": "Only allow one open row", "default": false },
+    { "type": "select", "id": "content_width", "label": "Content width", "options": [{ "value": "page", "label": "Page width" }, { "value": "full", "label": "Full width" }, { "value": "custom", "label": "Custom" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "Custom content width", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#171717" },
+    { "type": "color", "id": "background", "label": "Background", "default": "#FFFFFF" },
+    { "type": "color_background", "id": "background_gradient", "label": "Background gradient" },
+    { "type": "color", "id": "surface_color", "label": "Row background", "default": "#F5F5F3" },
+    { "type": "color", "id": "muted_color", "label": "Muted surface", "default": "#ECECE8" },
+    { "type": "header", "content": "Section" },
+    { "type": "checkbox", "id": "divider", "label": "Show top divider", "default": false },
+    { "type": "checkbox", "id": "rounded", "label": "Rounded top corners", "default": false },
+    { "type": "range", "id": "padding_top", "label": "Top padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 64 },
+    { "type": "range", "id": "padding_bottom", "label": "Bottom padding", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 64 }
+  ],
+  "presets": [
+    {
+      "name": "Product details",
+      "blocks": [
+        { "type": "_product-details-description" },
+        {
+          "type": "_product-details-collapsible",
+          "settings": { "heading": "Materials & construction" },
+          "blocks": [
+            { "type": "_product-details-spec-row", "settings": { "label": "Material", "value": "Aircraft-grade aluminum" } },
+            { "type": "_product-details-spec-row", "settings": { "label": "Finish", "value": "Matte anodized" } },
+            { "type": "_product-details-spec-row", "settings": { "label": "Weight", "value": "240 g" } },
+            { "type": "_product-details-note" }
+          ]
+        },
+        {
+          "type": "_product-details-collapsible",
+          "settings": { "heading": "Size & compatibility" },
+          "blocks": [
+            { "type": "_product-details-spec-row", "settings": { "label": "Dimensions", "value": "18 × 12 cm" } },
+            { "type": "_product-details-spec-row", "settings": { "label": "Compatibility", "value": "Add compatible models" } }
+          ]
+        },
+        {
+          "type": "_product-details-included",
+          "blocks": [
+            { "type": "_product-details-included-item", "settings": { "heading": "Main product" } },
+            { "type": "_product-details-included-item", "settings": { "heading": "Accessory" } }
+          ]
+        }
+      ]
+    }
+  ],
+  "enabled_on": { "templates": ["product"] }
+}
+{% endschema %}

@@ -1,0 +1,784 @@
+{%- liquid
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+
+  assign accessible_label = section.settings.heading | strip_html
+  if accessible_label == blank
+    assign accessible_label = shop.name
+  endif
+-%}
+
+<style>
+  #shopify-section-{{ section.id }} {
+    --section-padding-top: {{ section.settings.padding_top }}px;
+    --section-padding-bottom: {{ section.settings.padding_bottom }}px;
+    --featured-collections-width: {{ section.settings.custom_content_width }}vw;
+    --featured-collections-columns: {{ section.settings.columns }};
+    --featured-collections-columns-mobile: {{ section.settings.columns_mobile }};
+    --featured-collections-gap: {{ section.settings.card_gap }}px;
+    --featured-collections-gap-mobile: {{ section.settings.card_gap_mobile }}px;
+    --featured-collections-heading-size: {{ section.settings.heading_size }}px;
+    --featured-collections-heading-size-mobile: {{ section.settings.heading_size_mobile }}px;
+    --featured-collections-radius: {{ section.settings.section_radius }}px;
+    {%- render 'section-variables', section: section -%}
+  }
+</style>
+
+<div class="section ekko-featured-collections-section section--padding{% if section.settings.divider %} section--divider{% endif %}{% if section.settings.rounded %} section--rounded{% endif %}">
+  <featured-collections-tabs
+    class="ekko-featured-collections block"
+    data-desktop-carousel="{{ section.settings.carousel_on_desktop }}"
+    data-mobile-swipe="{{ section.settings.swipe_on_mobile }}"
+  >
+    <div class="ekko-featured-collections__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
+      {%- if section.settings.heading != blank or section.settings.subheading != blank or section.settings.description != blank -%}
+        <header class="ekko-featured-collections__header" data-align="{{ section.settings.heading_alignment }}">
+          {%- if section.settings.subheading != blank -%}
+            <p class="ekko-featured-collections__eyebrow">{{ section.settings.subheading | escape }}</p>
+          {%- endif -%}
+
+          {%- if section.settings.heading != blank -%}
+            <{{ section.settings.heading_tag }} class="ekko-featured-collections__heading">
+              {%- if section.settings.highlighted_text == 'none' -%}
+                {{- section.settings.heading -}}
+              {%- else -%}
+                {%- liquid
+                  assign with_gradient = false
+                  if section.settings.gradient_highlight != blank and section.settings.gradient_highlight != 'rgba(0,0,0,0)'
+                    assign with_gradient = true
+                  endif
+                -%}
+                {%- render 'highlighted-text', content: section.settings.heading, style: section.settings.highlighted_text, scribble: section.settings.highlighted_scribble, gradient: with_gradient -%}
+              {%- endif -%}
+            </{{ section.settings.heading_tag }}>
+          {%- endif -%}
+
+          {%- if section.settings.description != blank -%}
+            <div class="ekko-featured-collections__description rte">{{ section.settings.description }}</div>
+          {%- endif -%}
+        </header>
+      {%- endif -%}
+
+      {%- if section.blocks.size > 0 -%}
+        {%- assign first_block = section.blocks.first -%}
+        <div class="ekko-featured-collections__tabs-shell" data-tabs-style="{{ section.settings.tabs_style }}">
+          <div class="ekko-featured-collections__tabs-scroll">
+            <div class="ekko-featured-collections__tabs" role="tablist" aria-label="{{ accessible_label | escape }}">
+              {%- for block in section.blocks -%}
+                {%- assign selected_collection = block.settings.collection -%}
+                <button
+                  id="FeaturedCollectionsTab-{{ block.id }}"
+                  class="ekko-featured-collections__tab"
+                  type="button"
+                  role="tab"
+                  aria-controls="FeaturedCollectionsPanel-{{ block.id }}"
+                  aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                  tabindex="{% if forloop.first %}0{% else %}-1{% endif %}"
+                  data-tab
+                  data-block-id="{{ block.id }}"
+                  {{ block.shopify_attributes }}
+                >
+                  <span>
+                    {%- if block.settings.title != blank or selected_collection != blank -%}
+                      {{- block.settings.title | default: selected_collection.title | escape -}}
+                    {%- else -%}
+                      {{- 'onboarding.collection_title' | t | escape -}}
+                    {%- endif -%}
+                  </span>
+                </button>
+              {%- endfor -%}
+            </div>
+          </div>
+
+          {%- if section.settings.carousel_on_desktop -%}
+            <div class="ekko-featured-collections__controls" data-controls>
+              <button class="button button--secondary" type="button" data-previous aria-controls="FeaturedCollectionsViewport-{{ first_block.id }}" aria-label="{{ 'general.pagination.previous' | t | escape }}" disabled>
+                <span class="btn-fill" data-fill></span>
+                <span class="btn-text">{%- render 'icon', icon: 'chevron-left', class: 'transform' -%}</span>
+              </button>
+              <span class="ekko-featured-collections__progress" aria-hidden="true"><span data-progress></span></span>
+              <button class="button button--secondary" type="button" data-next aria-controls="FeaturedCollectionsViewport-{{ first_block.id }}" aria-label="{{ 'general.pagination.next' | t | escape }}">
+                <span class="btn-fill" data-fill></span>
+                <span class="btn-text">{%- render 'icon', icon: 'chevron-right', class: 'transform' -%}</span>
+              </button>
+              <span class="sr-only" aria-live="polite" data-status></span>
+            </div>
+          {%- endif -%}
+        </div>
+
+        <div class="ekko-featured-collections__panels">
+          {%- for block in section.blocks -%}
+            {%- liquid
+              assign selected_collection = block.settings.collection
+              assign product_source = block.settings.products
+              if product_source == blank
+                assign product_source = selected_collection.products
+              endif
+
+              assign show_view_all = false
+              if section.settings.show_view_all and selected_collection != blank
+                if selected_collection.all_products_count > section.settings.product_limit
+                  assign show_view_all = true
+                endif
+              endif
+
+            -%}
+            <div
+              id="FeaturedCollectionsPanel-{{ block.id }}"
+              class="ekko-featured-collections__panel"
+              role="tabpanel"
+              aria-labelledby="FeaturedCollectionsTab-{{ block.id }}"
+              data-panel
+              data-block-id="{{ block.id }}"
+              {% unless forloop.first %}hidden{% endunless %}
+            >
+              <div
+                id="FeaturedCollectionsViewport-{{ block.id }}"
+                class="ekko-featured-collections__viewport"
+                data-viewport
+                role="region"
+                aria-label="{{ block.settings.title | default: selected_collection.title | default: accessible_label | escape }}"
+                {% if section.settings.carousel_on_desktop or section.settings.swipe_on_mobile %}tabindex="0"{% endif %}
+              >
+                <ul class="ekko-featured-collections__list" role="list" data-list>
+                  {%- for product in product_source limit: section.settings.product_limit -%}
+                    {%- liquid
+                      assign lazy_load = true
+                      if forloop.index <= section.settings.columns
+                        assign lazy_load = false
+                      endif
+                    -%}
+                    <li class="ekko-featured-collections__item" data-item>
+                      {%- render 'product-card',
+                        product: product,
+                        product_id: product.id,
+                        section_id: section.id,
+                        block_id: block.id,
+                        lazy_load: lazy_load,
+                        image_ratio: settings.product_image_ratio,
+                        image_fill: settings.product_image_fill,
+                        show_secondary_image: settings.product_secondary_image,
+                        show_vendor: settings.product_vendor,
+                        show_rating: settings.product_rating,
+                        show_color_swatches: settings.product_color_swatches,
+                        show_countdown: settings.product_countdown,
+                        show_quick_add: settings.product_quick_add,
+                        show_quick_view: settings.product_quick_view,
+                        show_save_amount: settings.product_save_amount,
+                        save_type: settings.product_save_type,
+                        show_icon_list: settings.product_icon_list
+                      -%}
+                    </li>
+                  {%- else -%}
+                    {%- for i in (1..section.settings.product_limit) -%}
+                      {%- capture placeholder -%}product-{% cycle '1', '2', '3', '4', '5', '6' %}{%- endcapture -%}
+                      <li class="ekko-featured-collections__item" data-item>
+                        {%- render 'product-card-placeholder',
+                          image_ratio: settings.product_image_ratio,
+                          image_fill: settings.product_image_fill,
+                          show_vendor: settings.product_vendor,
+                          show_rating: settings.product_rating,
+                          text_alignment: settings.card_text_alignment,
+                          placeholder: placeholder
+                        -%}
+                      </li>
+                    {%- endfor -%}
+                  {%- endfor -%}
+                </ul>
+              </div>
+
+              {%- if show_view_all -%}
+                <div class="ekko-featured-collections__footer">
+                  <a
+                    class="ekko-featured-collections__view-all icon-with-text"
+                    href="{{ selected_collection.url }}"
+                    aria-label="{{ 'sections.featured_collection.view_all_label' | t: collection_name: selected_collection.title | escape }}"
+                  >
+                    <span>{{ 'sections.featured_collection.view_all' | t }}</span>
+                    {%- render 'icon', icon: 'arrow-right', size: 'sm' -%}
+                  </a>
+                </div>
+              {%- endif -%}
+            </div>
+          {%- endfor -%}
+        </div>
+      {%- endif -%}
+    </div>
+  </featured-collections-tabs>
+</div>
+
+{% stylesheet %}
+  .ekko-featured-collections-section {
+    color: rgb(var(--color-foreground));
+    background: var(--gradient-background, rgb(var(--color-background)));
+  }
+
+  .ekko-featured-collections-section.section--rounded {
+    overflow: hidden;
+    border-radius: var(--featured-collections-radius);
+  }
+
+  .ekko-featured-collections__frame,
+  .ekko-featured-collections__panel,
+  .ekko-featured-collections__viewport {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .ekko-featured-collections__header {
+    display: grid;
+    gap: .625rem;
+    max-width: 52rem;
+    margin-block-end: clamp(1.5rem, 3vw, 3rem);
+  }
+
+  .ekko-featured-collections__header[data-align='center'] {
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .ekko-featured-collections__header[data-align='right'] {
+    margin-inline-start: auto;
+    text-align: right;
+  }
+
+  .ekko-featured-collections__eyebrow {
+    margin: 0;
+    font-size: .72rem;
+    font-weight: 650;
+    line-height: 1.2;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    opacity: .68;
+  }
+
+  .ekko-featured-collections__heading {
+    display: block;
+    margin: 0;
+    color: rgb(var(--color-foreground));
+    -webkit-text-fill-color: rgb(var(--color-foreground));
+    font-family: var(--font-heading-family);
+    font-style: var(--font-heading-style);
+    font-weight: var(--font-heading-weight);
+    font-size: clamp(1.75rem, 9vw, var(--featured-collections-heading-size-mobile));
+    line-height: 1.02;
+    letter-spacing: -.03em;
+    text-transform: var(--font-heading-text-transform);
+    opacity: 1 !important;
+    visibility: visible !important;
+    position: relative;
+    z-index: 1;
+  }
+
+  .ekko-featured-collections__description {
+    max-width: 44rem;
+    font-size: clamp(.95rem, 1.2vw, 1.125rem);
+    line-height: 1.6;
+    opacity: .72;
+  }
+
+  .ekko-featured-collections__header[data-align='center'] .ekko-featured-collections__description { margin-inline: auto; }
+  .ekko-featured-collections__header[data-align='right'] .ekko-featured-collections__description { margin-inline-start: auto; }
+
+  .ekko-featured-collections__tabs-shell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-block-end: clamp(1.5rem, 2.5vw, 2.25rem);
+  }
+
+  .ekko-featured-collections__tabs-scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+    scrollbar-width: none;
+  }
+
+  .ekko-featured-collections__tabs-scroll::-webkit-scrollbar { display: none; }
+
+  .ekko-featured-collections__tabs {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .ekko-featured-collections__tab {
+    position: relative;
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    border: 0;
+    border-radius: 999px;
+    padding: .75rem 1.2rem;
+    color: inherit;
+    background: rgba(var(--color-foreground), .055);
+    font: inherit;
+    font-size: .875rem;
+    font-weight: 650;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: color .2s ease, background-color .2s ease;
+  }
+
+  .ekko-featured-collections__tab:hover { background: rgba(var(--color-foreground), .1); }
+  .ekko-featured-collections__tab:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+  .ekko-featured-collections__tab[aria-selected='true'] {
+    color: rgb(var(--color-button-text));
+    background: var(--color-button-gradient, rgb(var(--color-button-background)));
+  }
+
+  .ekko-featured-collections__tabs-shell[data-tabs-style='underline'] .ekko-featured-collections__tabs { gap: clamp(1.25rem, 3vw, 3rem); }
+  .ekko-featured-collections__tabs-shell[data-tabs-style='underline'] .ekko-featured-collections__tab {
+    min-height: 2.75rem;
+    border-radius: 0;
+    padding-inline: 0;
+    background: transparent;
+    color: inherit;
+    opacity: .55;
+  }
+
+  .ekko-featured-collections__tabs-shell[data-tabs-style='underline'] .ekko-featured-collections__tab::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-end: 0;
+    height: 2px;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform .25s ease;
+  }
+
+  .ekko-featured-collections__tabs-shell[data-tabs-style='underline'] .ekko-featured-collections__tab[aria-selected='true'] {
+    opacity: 1;
+  }
+
+  .ekko-featured-collections__tabs-shell[data-tabs-style='underline'] .ekko-featured-collections__tab[aria-selected='true']::after { transform: scaleX(1); }
+
+  .ekko-featured-collections__panel[hidden] { display: none; }
+
+  .ekko-featured-collections__controls {
+    display: none;
+    align-items: center;
+    gap: .625rem;
+    flex: 0 0 auto;
+  }
+
+  .ekko-featured-collections__view-all {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: inherit;
+    font-size: .82rem;
+    font-weight: 650;
+    text-decoration: none;
+  }
+
+  .ekko-featured-collections__view-all span:first-child { box-shadow: 0 1px currentColor; }
+
+  .ekko-featured-collections__footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-block-start: clamp(1.25rem, 2.5vw, 2rem);
+  }
+
+  .ekko-featured-collections__controls .button {
+    width: 2.75rem;
+    height: 2.75rem;
+    min-width: 2.75rem;
+    min-height: 0;
+    border: 0;
+    border-radius: 999px;
+    padding: 0;
+    color: rgb(var(--color-button-text));
+    background: var(--color-button-gradient, rgb(var(--color-button-background)));
+  }
+
+  .ekko-featured-collections__controls .button[disabled] { opacity: .35; }
+
+  .ekko-featured-collections__progress {
+    position: relative;
+    width: clamp(2.75rem, 5vw, 4.5rem);
+    height: 2px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: rgba(var(--color-foreground), .14);
+  }
+
+  .ekko-featured-collections__progress > span {
+    position: absolute;
+    inset: 0;
+    background: rgb(var(--color-foreground));
+    transform: scaleX(var(--panel-progress, 0));
+    transform-origin: left center;
+    transition: transform .2s ease;
+  }
+
+  [dir='rtl'] .ekko-featured-collections__progress > span { transform-origin: right center; }
+
+  .ekko-featured-collections__viewport { outline: none; }
+  .ekko-featured-collections__list {
+    display: grid;
+    grid-template-columns: repeat(var(--featured-collections-columns-mobile), minmax(0, 1fr));
+    gap: var(--featured-collections-gap-mobile);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ekko-featured-collections__item {
+    min-width: 0;
+    display: flex;
+  }
+
+  .ekko-featured-collections__item > .card {
+    min-width: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-featured-collections__header { margin-block-end: 1.5rem; }
+
+    .ekko-featured-collections__description {
+      font-size: .9375rem;
+      line-height: 1.55;
+    }
+
+    .ekko-featured-collections__tabs-shell {
+      margin-block-end: 1.25rem;
+    }
+
+    .ekko-featured-collections__tabs-scroll {
+      margin-inline: calc(var(--page-padding) * -1);
+      padding-inline: var(--page-padding);
+    }
+
+    .ekko-featured-collections__tabs {
+      gap: .5rem;
+      padding-block: 3px;
+    }
+
+    .ekko-featured-collections__tab {
+      min-height: 2.75rem;
+      padding: .7rem 1rem;
+      font-size: .8125rem;
+    }
+
+    .ekko-featured-collections[data-mobile-swipe='true'] .ekko-featured-collections__viewport {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .ekko-featured-collections[data-mobile-swipe='true'] .ekko-featured-collections__viewport::-webkit-scrollbar { display: none; }
+    .ekko-featured-collections[data-mobile-swipe='true'] .ekko-featured-collections__list {
+      display: flex;
+      align-items: stretch;
+      gap: var(--featured-collections-gap-mobile);
+      width: max-content;
+    }
+
+    .ekko-featured-collections[data-mobile-swipe='true'] .ekko-featured-collections__item {
+      flex: 0 0 calc((var(--featured-collections-viewport-width) - var(--featured-collections-gap-mobile) * (var(--featured-collections-columns-mobile) - 1)) / var(--featured-collections-columns-mobile));
+      width: calc((var(--featured-collections-viewport-width) - var(--featured-collections-gap-mobile) * (var(--featured-collections-columns-mobile) - 1)) / var(--featured-collections-columns-mobile));
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+    }
+
+    .ekko-featured-collections__footer {
+      justify-content: flex-start;
+      margin-block-start: 1rem;
+    }
+  }
+
+  @media screen and (min-width: 750px) {
+    .ekko-featured-collections__frame[data-width='custom'] {
+      width: min(100%, var(--featured-collections-width));
+      max-width: var(--featured-collections-width);
+      margin-inline: auto;
+    }
+
+    .ekko-featured-collections__heading { font-size: var(--featured-collections-heading-size); }
+  }
+
+  @media screen and (min-width: 750px) and (max-width: 989px) {
+    .ekko-featured-collections__list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+
+  @media screen and (min-width: 990px) {
+    .ekko-featured-collections[data-overflow] .ekko-featured-collections__controls { display: flex; }
+
+    .ekko-featured-collections__list {
+      grid-template-columns: repeat(var(--featured-collections-columns), minmax(0, 1fr));
+      gap: var(--featured-collections-gap);
+    }
+
+    .ekko-featured-collections[data-desktop-carousel='true'] .ekko-featured-collections__viewport {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .ekko-featured-collections[data-desktop-carousel='true'] .ekko-featured-collections__viewport::-webkit-scrollbar { display: none; }
+    .ekko-featured-collections[data-desktop-carousel='true'] .ekko-featured-collections__list {
+      display: flex;
+      align-items: stretch;
+      gap: var(--featured-collections-gap);
+      width: max-content;
+    }
+
+    .ekko-featured-collections[data-desktop-carousel='true'] .ekko-featured-collections__item {
+      flex: 0 0 calc((var(--featured-collections-viewport-width) - var(--featured-collections-gap) * (var(--featured-collections-columns) - 1)) / var(--featured-collections-columns));
+      width: calc((var(--featured-collections-viewport-width) - var(--featured-collections-gap) * (var(--featured-collections-columns) - 1)) / var(--featured-collections-columns));
+      scroll-snap-align: start;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-featured-collections__tab,
+    .ekko-featured-collections__progress > span { transition: none; }
+    .ekko-featured-collections__viewport { scroll-behavior: auto !important; }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('featured-collections-tabs')) {
+    customElements.define('featured-collections-tabs', class FeaturedCollectionsTabs extends HTMLElement {
+      connectedCallback() {
+        this.tabs = Array.from(this.querySelectorAll('[data-tab]'));
+        this.panels = Array.from(this.querySelectorAll('[data-panel]'));
+        if (this.tabs.length === 0 || this.panels.length === 0) return;
+
+        this.controls = this.querySelector('[data-controls]');
+        this.previousButton = this.querySelector('[data-previous]');
+        this.nextButton = this.querySelector('[data-next]');
+        this.status = this.querySelector('[data-status]');
+
+        this.onClick = this.handleClick.bind(this);
+        this.onKeydown = this.handleKeydown.bind(this);
+        this.onEditorSelect = this.handleEditorSelect.bind(this);
+        this.onResize = this.updateAll.bind(this);
+        this.addEventListener('click', this.onClick);
+        this.addEventListener('keydown', this.onKeydown);
+        this.addEventListener('shopify:block:select', this.onEditorSelect);
+
+        this.panels.forEach((panel) => {
+          const viewport = panel.querySelector('[data-viewport]');
+          if (!viewport) return;
+          viewport.scrollLeft = 0;
+          viewport.addEventListener('scroll', () => this.updatePanel(panel), { passive: true });
+        });
+
+        this.resizeObserver = new ResizeObserver(this.onResize);
+        this.panels.forEach((panel) => {
+          const viewport = panel.querySelector('[data-viewport]');
+          if (viewport) this.resizeObserver.observe(viewport);
+        });
+        this.updateAll();
+      }
+
+      disconnectedCallback() {
+        this.removeEventListener('click', this.onClick);
+        this.removeEventListener('keydown', this.onKeydown);
+        this.removeEventListener('shopify:block:select', this.onEditorSelect);
+        this.resizeObserver?.disconnect();
+      }
+
+      handleClick(event) {
+        const tab = event.target.closest('[data-tab]');
+        if (tab && this.contains(tab)) {
+          this.activate(this.tabs.indexOf(tab), true);
+          return;
+        }
+
+        const button = event.target.closest('[data-previous], [data-next]');
+        if (!button || !this.contains(button)) return;
+        this.move(this.activePanel, button.hasAttribute('data-next') ? 1 : -1);
+      }
+
+      handleKeydown(event) {
+        const tab = event.target.closest('[data-tab]');
+        if (!tab) return;
+        const current = this.tabs.indexOf(tab);
+        let target = current;
+        if (event.key === 'ArrowRight') target = (current + 1) % this.tabs.length;
+        if (event.key === 'ArrowLeft') target = (current - 1 + this.tabs.length) % this.tabs.length;
+        if (event.key === 'Home') target = 0;
+        if (event.key === 'End') target = this.tabs.length - 1;
+        if (target === current) return;
+        event.preventDefault();
+        this.activate(target, true);
+      }
+
+      handleEditorSelect(event) {
+        const blockId = event.detail?.blockId;
+        const index = this.tabs.findIndex((tab) => tab.dataset.blockId === blockId);
+        if (index >= 0) this.activate(index, false);
+      }
+
+      activate(index, focusTab) {
+        if (index < 0 || index >= this.tabs.length) return;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        this.tabs.forEach((tab, tabIndex) => {
+          const selected = tabIndex === index;
+          tab.setAttribute('aria-selected', selected ? 'true' : 'false');
+          tab.tabIndex = selected ? 0 : -1;
+          this.panels[tabIndex].hidden = !selected;
+        });
+
+        const selectedTab = this.tabs[index];
+        const selectedPanel = this.panels[index];
+        this.activePanel = selectedPanel;
+        const selectedViewport = selectedPanel.querySelector('[data-viewport]');
+        if (selectedViewport) {
+          selectedViewport.scrollTo({ left: 0, behavior: 'auto' });
+          this.previousButton?.setAttribute('aria-controls', selectedViewport.id);
+          this.nextButton?.setAttribute('aria-controls', selectedViewport.id);
+        }
+        selectedTab.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'nearest' });
+        if (focusTab) selectedTab.focus({ preventScroll: true });
+        if (!reduceMotion && selectedPanel.animate) {
+          selectedPanel.animate(
+            [{ opacity: 0, transform: 'translateY(10px)' }, { opacity: 1, transform: 'translateY(0)' }],
+            { duration: 220, easing: 'cubic-bezier(.22, 1, .36, 1)' }
+          );
+        }
+        requestAnimationFrame(() => this.updatePanel(selectedPanel));
+      }
+
+      isCarouselEnabled() {
+        return window.matchMedia('(min-width: 990px)').matches
+          ? this.dataset.desktopCarousel === 'true'
+          : this.dataset.mobileSwipe === 'true';
+      }
+
+      move(panel, direction) {
+        if (!panel || !this.isCarouselEnabled()) return;
+        const viewport = panel.querySelector('[data-viewport]');
+        const firstItem = panel.querySelector('[data-item]');
+        const list = panel.querySelector('[data-list]');
+        if (!viewport || !firstItem || !list) return;
+        const styles = getComputedStyle(list);
+        const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+        const directionFactor = document.documentElement.dir === 'rtl' ? -1 : 1;
+        viewport.scrollBy({ left: direction * directionFactor * (firstItem.getBoundingClientRect().width + gap), behavior: 'smooth' });
+      }
+
+      updateAll() {
+        this.panels.forEach((panel) => {
+          const viewport = panel.querySelector('[data-viewport]');
+          if (viewport) panel.style.setProperty('--featured-collections-viewport-width', `${viewport.clientWidth}px`);
+        });
+        this.activePanel = this.panels.find((panel) => !panel.hidden) || this.panels[0];
+        this.updatePanel(this.activePanel);
+      }
+
+      updatePanel(panel) {
+        const viewport = panel.querySelector('[data-viewport]');
+        const list = panel.querySelector('[data-list]');
+        const items = Array.from(panel.querySelectorAll('[data-item]'));
+        if (!viewport || !list || items.length === 0) return;
+
+        panel.style.setProperty('--featured-collections-viewport-width', `${viewport.clientWidth}px`);
+        const maximum = Math.max(0, viewport.scrollWidth - viewport.clientWidth);
+        const position = Math.min(maximum, Math.abs(viewport.scrollLeft));
+        const enabled = this.isCarouselEnabled() && maximum > 4;
+        this.toggleAttribute('data-overflow', enabled);
+
+        if (this.previousButton) this.previousButton.disabled = !enabled || position <= 2;
+        if (this.nextButton) this.nextButton.disabled = !enabled || position >= maximum - 2;
+
+        const progress = maximum > 0 ? position / maximum : 0;
+        this.style.setProperty('--panel-progress', progress.toFixed(4));
+        const styles = getComputedStyle(list);
+        const gap = parseFloat(styles.columnGap || styles.gap) || 0;
+        const step = items[0].getBoundingClientRect().width + gap;
+        const current = Math.min(items.length, Math.round(position / Math.max(step, 1)) + 1);
+        if (this.status) this.status.textContent = `${current} / ${items.length}`;
+      }
+    });
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "t:sections.featured-collections.name",
+  "class": "featured-collections",
+  "max_blocks": 6,
+  "settings": [
+    { "type": "range", "id": "product_limit", "label": "t:sections.global.settings.product_limit.label", "min": 2, "max": 12, "step": 1, "default": 8 },
+    { "type": "header", "content": "t:sections.featured-collections.settings.layout.header" },
+    { "type": "range", "id": "columns", "label": "t:sections.global.settings.columns.label", "min": 2, "max": 5, "step": 1, "default": 4 },
+    { "type": "range", "id": "card_gap", "label": "t:sections.featured-collections.settings.card_gap.label", "min": 8, "max": 48, "step": 2, "unit": "px", "default": 24 },
+    { "type": "checkbox", "id": "carousel_on_desktop", "label": "t:sections.global.settings.carousel_on_desktop.label", "default": true },
+    { "type": "checkbox", "id": "show_view_all", "label": "t:sections.featured-collection.settings.show_view_all.label", "info": "t:sections.featured-collection.settings.show_view_all.info", "default": true },
+    { "type": "select", "id": "tabs_style", "label": "t:sections.featured-collections.settings.tabs_style.label", "options": [{ "value": "pills", "label": "t:sections.featured-collections.options.pills" }, { "value": "underline", "label": "t:sections.featured-collections.options.underline" }], "default": "pills" },
+    { "type": "header", "content": "t:sections.global.settings.header__mobile.content" },
+    { "type": "select", "id": "columns_mobile", "label": "t:sections.global.settings.columns_mobile.label", "options": [{ "value": "1", "label": "t:sections.global.settings.columns_mobile.options__1.label" }, { "value": "2", "label": "t:sections.global.settings.columns_mobile.options__2.label" }], "default": "1" },
+    { "type": "range", "id": "card_gap_mobile", "label": "t:sections.featured-collections.settings.card_gap_mobile.label", "min": 8, "max": 28, "step": 2, "unit": "px", "default": 16 },
+    { "type": "checkbox", "id": "swipe_on_mobile", "label": "t:sections.global.settings.swipe_on_mobile.label", "default": true },
+    { "type": "header", "content": "t:sections.global.settings.header__heading.content" },
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.global.settings.heading.label", "default": "Featured collections" },
+    { "type": "range", "id": "heading_size", "label": "t:sections.featured-collections.settings.heading_size.label", "min": 28, "max": 96, "step": 2, "unit": "px", "default": 56 },
+    { "type": "range", "id": "heading_size_mobile", "label": "t:sections.featured-collections.settings.heading_size_mobile.label", "min": 24, "max": 56, "step": 2, "unit": "px", "default": 38 },
+    { "type": "select", "id": "heading_alignment", "label": "t:sections.global.settings.heading_alignment.label", "options": [{ "value": "left", "label": "t:sections.global.settings.heading_alignment.options__1.label" }, { "value": "center", "label": "t:sections.global.settings.heading_alignment.options__2.label" }, { "value": "right", "label": "t:sections.global.settings.heading_alignment.options__3.label" }], "default": "left" },
+    { "type": "select", "id": "heading_tag", "label": "t:sections.global.settings.heading_tag.label", "options": [{ "value": "h1", "label": "H1" }, { "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }, { "value": "h4", "label": "H4" }, { "value": "div", "label": "Div" }], "default": "h2" },
+    { "type": "text", "id": "subheading", "label": "t:sections.global.settings.subheading.label", "default": "Shop by edit" },
+    { "type": "richtext", "id": "description", "label": "t:sections.global.settings.description.label" },
+    { "type": "select", "id": "highlighted_text", "label": "t:sections.global.settings.highlighted_text.label", "options": [{ "value": "none", "label": "t:sections.global.settings.highlighted_text.options__1.label" }, { "value": "text", "label": "t:sections.global.settings.highlighted_text.options__2.label" }, { "value": "full_text", "label": "t:sections.global.settings.highlighted_text.options__3.label" }, { "value": "half_text", "label": "t:sections.global.settings.highlighted_text.options__4.label" }, { "value": "underline", "label": "t:sections.global.settings.highlighted_text.options__5.label" }, { "value": "stencil", "label": "t:sections.global.settings.highlighted_text.options__6.label" }, { "value": "scribble", "label": "t:sections.global.settings.highlighted_text.options__7.label" }], "default": "none" },
+    { "type": "select", "id": "highlighted_scribble", "label": "t:sections.global.settings.highlighted_scribble.label", "options": [{ "value": "circle", "label": "t:sections.global.settings.highlighted_scribble.options__1.label" }, { "value": "basic-underline", "label": "t:sections.global.settings.highlighted_scribble.options__2.label" }, { "value": "sketch-underline", "label": "t:sections.global.settings.highlighted_scribble.options__3.label" }, { "value": "squiggle-underline", "label": "t:sections.global.settings.highlighted_scribble.options__4.label" }, { "value": "squiggle-underline-2", "label": "t:sections.global.settings.highlighted_scribble.options__5.label" }], "default": "circle", "visible_if": "{{ section.settings.highlighted_text == 'scribble' }}" },
+    { "type": "header", "content": "t:sections.global.settings.header__colors.content" },
+    { "type": "color", "id": "color_text", "label": "t:sections.global.settings.color_text.label", "default": "#1C1C1C" },
+    { "type": "color", "id": "color_background", "label": "t:sections.global.settings.color_background.label", "default": "#FFFFFF" },
+    { "type": "color_background", "id": "gradient_background", "label": "t:sections.global.settings.gradient_background.label" },
+    { "type": "color", "id": "color_highlight", "label": "t:sections.global.settings.color_highlight.label", "default": "#D7FF64" },
+    { "type": "color_background", "id": "gradient_highlight", "label": "t:sections.global.settings.gradient_highlight.label" },
+    { "type": "color", "id": "color_button_text", "label": "t:sections.global.settings.color_button_text.label" },
+    { "type": "color", "id": "color_button_background", "label": "t:sections.global.settings.color_button_background.label" },
+    { "type": "color_background", "id": "color_button_gradient", "label": "t:sections.global.settings.color_button_gradient.label" },
+    { "type": "header", "content": "t:sections.global.settings.header__section.content" },
+    { "type": "select", "id": "content_width", "label": "t:sections.featured-collections.settings.content_width.label", "options": [{ "value": "page", "label": "t:sections.featured-collections.options.page_width" }, { "value": "full", "label": "t:sections.featured-collections.options.full_width" }, { "value": "custom", "label": "t:sections.featured-collections.options.custom_width" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "t:sections.featured-collections.settings.custom_content_width.label", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ section.settings.content_width == 'custom' }}" },
+    { "type": "range", "id": "padding_top", "label": "t:sections.global.settings.padding_top.label", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "range", "id": "padding_bottom", "label": "t:sections.global.settings.padding_bottom.label", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
+    { "type": "checkbox", "id": "divider", "label": "t:sections.global.settings.divider.label", "default": false },
+    { "type": "checkbox", "id": "rounded", "label": "t:sections.global.settings.rounded.label", "default": false },
+    { "type": "range", "id": "section_radius", "label": "t:sections.featured-collections.settings.section_radius.label", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 0, "visible_if": "{{ section.settings.rounded }}" }
+  ],
+  "blocks": [
+    {
+      "type": "collection",
+      "name": "t:sections.global.blocks.collection.name",
+      "settings": [
+        { "type": "collection", "id": "collection", "label": "t:sections.global.settings.collection.label" },
+        { "type": "product_list", "id": "products", "label": "t:sections.global.settings.products.label", "info": "t:sections.global.settings.products.info", "limit": 12 },
+        { "type": "text", "id": "title", "label": "t:sections.global.settings.title.label" }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.featured-collections.presets.name",
+      "blocks": [
+        { "type": "collection", "settings": { "title": "Best sellers" } },
+        { "type": "collection", "settings": { "title": "New arrivals" } },
+        { "type": "collection", "settings": { "title": "Trending" } }
+      ]
+    }
+  ],
+  "disabled_on": { "templates": ["password"], "groups": ["header", "footer", "custom.overlay"] }
+}
+{% endschema %}
