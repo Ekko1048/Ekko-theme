@@ -359,3 +359,52 @@ a.ekko-product-title__vendor:hover { text-decoration: underline; }
     scroll-behavior: auto !important;
   }
 }
+
+/* Product quick view reuses the default product composition inside a fixed drawer. */
+.quick-view .ekko-product-showcase-section--modal,
+.quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__frame {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.quick-view .ekko-product-showcase-section--modal {
+  overflow: hidden;
+}
+
+.quick-view .ekko-product-showcase-section--modal .ekko-product-showcase {
+  min-height: 0;
+}
+
+@media screen and (max-width: 1023px) {
+  .quick-view .quick-view__content {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .quick-view .ekko-product-showcase-section--modal,
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__frame {
+    height: auto;
+    min-height: 100%;
+  }
+
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase.product {
+    display: flex;
+  }
+
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__details {
+    padding-block-end: max(var(--sp-8), env(safe-area-inset-bottom));
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase,
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__media,
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__details {
+    height: 100%;
+  }
+
+  .quick-view .ekko-product-showcase-section--modal .ekko-product-showcase__details {
+    max-height: 100%;
+  }
+}
