@@ -54,23 +54,27 @@
             assign card_alt = block.settings.heading | strip_html
           endif
           assign tags = block.settings.tags | split: ','
+          assign image_width_desktop = block.settings.image_width_desktop | default: 37
+          assign image_width_mobile = block.settings.image_width_mobile | default: 100
+          assign image_width_large_vw = image_width_desktop | times: 0.5
         -%}
         <div class="ekko-style-selector__item" role="listitem" {{ block.shopify_attributes }}>
           <article
             class="ekko-style-card"
-            style="--card-background: {{ block.settings.card_background }}; --card-text: {{ block.settings.text_color }}; --card-accent: {{ block.settings.accent_color }}; --card-title-size: {{ block.settings.heading_size }}px;"
+            style="--card-background: {{ block.settings.card_background }}; --card-text: {{ block.settings.text_color }}; --card-accent: {{ block.settings.accent_color }}; --card-title-size: {{ block.settings.heading_size }}px; --card-image-width: {{ image_width_desktop }}%; --card-image-width-mobile: {{ image_width_mobile }}%; --card-image-fit: {{ block.settings.image_fit | default: 'contain' }};"
           >
             <span class="ekko-style-card__base" aria-hidden="true"></span>
 
             <div class="ekko-style-card__media">
               {%- if block.settings.image != blank -%}
                 {%- capture image_markup -%}
+                  {%- capture image_sizes -%}(max-width: 749px) {{ image_width_mobile }}vw, (max-width: 1099px) {{ image_width_desktop }}vw, {{ image_width_large_vw }}vw{%- endcapture -%}
                   {{- block.settings.image
                     | image_url: width: 1200
                     | image_tag:
                       loading: 'lazy',
                       widths: '240, 360, 480, 640, 800, 1000, 1200',
-                      sizes: '(max-width: 749px) 72vw, (max-width: 1199px) 34vw, 280px',
+                      sizes: image_sizes,
                       alt: card_alt,
                       class: 'ekko-style-card__image'
                   -}}
@@ -448,7 +452,7 @@
 
   .ekko-style-card__media {
     z-index: 3;
-    width: 37%;
+    width: var(--card-image-width);
     height: calc(100% + var(--ekko-style-image-protrusion));
     inset-inline: 0 auto;
     inset-block: auto 0;
@@ -486,7 +490,7 @@
   .ekko-style-card__content {
     position: absolute;
     z-index: 2;
-    inset-inline: 37% 0;
+    inset-inline: var(--card-image-width) 0;
     inset-block: auto 0;
     display: flex;
     min-width: 0;
@@ -622,7 +626,7 @@
     border: 0;
     background: transparent;
     box-shadow: none;
-    object-fit: cover;
+    object-fit: var(--card-image-fit, contain);
     object-position: center;
     filter: none;
   }
@@ -686,7 +690,10 @@
     .ekko-style-card__heading { overflow-wrap: anywhere; }
 
     .ekko-style-card__image {
-      object-fit: cover;
+      width: var(--card-image-width-mobile);
+      max-width: 100%;
+      margin-inline: auto;
+      object-fit: var(--card-image-fit, contain);
       object-position: center;
     }
   }
@@ -730,8 +737,11 @@
       "name": "Category card",
       "settings": [
         { "type": "header", "content": "Media" },
-        { "type": "image_picker", "id": "image", "label": "Image", "info": "The image automatically fills the media area. Use a transparent PNG or WebP when you want the desktop image to blend into the L-shaped card." },
+        { "type": "image_picker", "id": "image", "label": "Image", "info": "Use a transparent PNG or WebP for the desktop L-shaped composition, then choose whether to show the full image or fill the media area." },
         { "type": "text", "id": "image_alt", "label": "Image alt text", "info": "Uses the card heading when left blank." },
+        { "type": "select", "id": "image_fit", "label": "Image fit", "options": [{ "value": "contain", "label": "Show full image" }, { "value": "cover", "label": "Fill and crop" }], "default": "contain" },
+        { "type": "range", "id": "image_width_desktop", "label": "Desktop image width", "min": 20, "max": 55, "step": 1, "unit": "%", "default": 37 },
+        { "type": "range", "id": "image_width_mobile", "label": "Mobile image width", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 100 },
 
         { "type": "header", "content": "Content" },
         { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Category" },
