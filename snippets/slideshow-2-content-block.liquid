@@ -1,0 +1,117 @@
+{% doc %}
+  Wraps Slideshow 2 child content with responsive flow or free-position controls.
+
+  @param {block} block - The current Theme Block.
+  @param {string} content - Captured child markup.
+{% enddoc %}
+
+{%- liquid
+  assign visibility_class = ''
+  if block.settings.visibility == 'desktop'
+    assign visibility_class = ' slideshow-2__block--desktop-only'
+  elsif block.settings.visibility == 'mobile'
+    assign visibility_class = ' slideshow-2__block--mobile-only'
+  endif
+
+  assign position_class = ''
+  if block.settings.position_mode == 'free'
+    assign position_class = ' slideshow-2__block--free'
+  endif
+
+  assign text_alignment = 'left'
+  if block.settings.alignment == 'center'
+    assign text_alignment = 'center'
+  elsif block.settings.alignment == 'flex-end'
+    assign text_alignment = 'right'
+  endif
+
+  assign text_alignment_mobile = 'left'
+  if block.settings.alignment_mobile == 'center'
+    assign text_alignment_mobile = 'center'
+  elsif block.settings.alignment_mobile == 'flex-end'
+    assign text_alignment_mobile = 'right'
+  endif
+-%}
+
+{% style %}
+  #shopify-block-{{ block.id }} {
+    width: min(100%, {{ block.settings.width }}%);
+    margin-block-start: {{ block.settings.spacing_top }}px;
+    align-self: {{ block.settings.alignment }};
+    text-align: {{ text_alignment }};
+    {% if block.settings.position_mode == 'free' %}
+      position: absolute;
+      left: {{ block.settings.position_x }}%;
+      top: {{ block.settings.position_y }}%;
+      z-index: {{ block.settings.z_index }};
+      margin-block-start: 0;
+      transform: translate(-50%, -50%);
+    {% endif %}
+  }
+
+  #shopify-block-{{ block.id }} > .slideshow-2__block,
+  #shopify-block-{{ block.id }} > .slideshow-2__block .slideshow-2__heading,
+  #shopify-block-{{ block.id }} > .slideshow-2__block .slideshow-2__button-link {
+    {% if block.settings.color != blank %}
+      color: {{ block.settings.color }};
+    {% endif %}
+  }
+
+  #shopify-block-{{ block.id }} > .slideshow-2__block .slideshow-2__button-link {
+    {% if block.settings.style != 'link' and block.settings.background_color != blank %}
+      background: {{ block.settings.background_color }};
+      background-color: {{ block.settings.background_color }};
+    {% endif %}
+  }
+
+  {% if block.settings.visibility == 'mobile' %}
+    @media screen and (min-width: 768px) {
+      #shopify-block-{{ block.id }} { display: none; }
+    }
+  {% endif %}
+
+  @media screen and (max-width: 767px) {
+    #shopify-block-{{ block.id }} {
+      width: min(100%, {{ block.settings.width_mobile }}%);
+      margin-block-start: {{ block.settings.spacing_top_mobile }}px;
+      align-self: {{ block.settings.alignment_mobile }};
+      text-align: {{ text_alignment_mobile }};
+      {% if block.settings.position_mode == 'free' %}
+        left: {{ block.settings.position_x_mobile }}%;
+        top: {{ block.settings.position_y_mobile }}%;
+        margin-block-start: 0;
+      {% endif %}
+    }
+
+    #shopify-block-{{ block.id }} > .slideshow-2__block,
+    #shopify-block-{{ block.id }} > .slideshow-2__block .slideshow-2__heading,
+    #shopify-block-{{ block.id }} > .slideshow-2__block .slideshow-2__button-link {
+      {% if block.settings.color_mobile != blank %}
+        color: {{ block.settings.color_mobile }};
+      {% elsif block.settings.color != blank %}
+        color: {{ block.settings.color }};
+      {% endif %}
+    }
+
+    #shopify-block-{{ block.id }} > .slideshow-2__block .slideshow-2__button-link {
+      {% if block.settings.style != 'link' and block.settings.background_color_mobile != blank %}
+        background: {{ block.settings.background_color_mobile }};
+        background-color: {{ block.settings.background_color_mobile }};
+      {% elsif block.settings.style != 'link' and block.settings.background_color != blank %}
+        background: {{ block.settings.background_color }};
+        background-color: {{ block.settings.background_color }};
+      {% endif %}
+    }
+
+    {% if block.settings.visibility == 'desktop' %}
+      #shopify-block-{{ block.id }} { display: none; }
+    {% endif %}
+  }
+{% endstyle %}
+
+<div
+  class="slideshow-2__block{{ position_class }}{{ visibility_class }}"
+  data-slideshow-2-content-block
+>
+  {{ content }}
+</div>

@@ -1,0 +1,118 @@
+{% doc %}
+  Shared product media and Theme Block shell used by Featured product and the
+  product template.
+
+  @param {product} product_resource - Product selected by the section or the product template.
+  @param {string} blocks_content - Captured output from content_for 'blocks'.
+  @param {section} section - Parent section object and its layout settings.
+  @param {string} [mode] - Either featured or main.
+{% enddoc %}
+
+{{ 'section-product-showcase.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign product_item = product_resource
+  assign placeholder = false
+  if product_item == blank
+    assign placeholder = true
+  endif
+
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+  assign media_count = product_item.media.size
+  assign first_media = product_item.selected_or_first_available_variant.featured_media | default: product_item.featured_media
+  assign first_3d_model = product_item.media | where: 'media_type', 'model' | first
+
+  assign frame_class = 'page-width'
+  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+    assign frame_class = 'page-width page-width--full'
+  endif
+-%}
+
+<style>
+  #shopify-section-{{ section.id }} {
+    --section-padding-top: {{ section.settings.padding_top }}px;
+    --section-padding-bottom: {{ section.settings.padding_bottom }}px;
+    --showcase-content-width: {{ section.settings.custom_content_width }}vw;
+    --showcase-media-size: {{ section.settings.media_size }}%;
+    --showcase-gap-desktop: {{ section.settings.desktop_gap }}px;
+    --showcase-gap-mobile: {{ section.settings.mobile_gap }}px;
+    --showcase-block-gap: {{ section.settings.block_gap }}px;
+    --showcase-radius: {{ section.settings.panel_radius }}px;
+    --showcase-panel-background: {{ section.settings.panel_background.rgb }};
+    --showcase-media-background: {{ section.settings.media_background.rgb }};
+    --color-foreground: {{ section.settings.color_text.rgb }};
+    --color-background: {{ section.settings.color_background.rgb }};
+    --aspect-ratio: {{ first_media.aspect_ratio | default: 1 }};
+  }
+</style>
+
+{%- if first_3d_model -%}
+  {{ 'model-viewer.css' | asset_url | stylesheet_tag }}
+  <link id="ModelViewerStyle" rel="stylesheet" href="https://cdn.shopify.com/shopifycloud/model-viewer-ui/assets/v1.0/model-viewer-ui.css" media="print" onload="this.media='all'">
+  <link id="ModelViewerOverride" rel="stylesheet" href="{{ 'model-viewer-ui.css' | asset_url }}" media="print" onload="this.media='all'">
+{%- endif -%}
+
+{%- if product_item.quantity_price_breaks_configured? -%}
+  {{ 'volume-pricing.css' | asset_url | stylesheet_tag }}
+  <script src="{{ 'volume-pricing.js' | asset_url }}" defer="defer"></script>
+{%- endif -%}
+
+<div class="section ekko-product-showcase-section section--padding{% if section.settings.divider %} section--divider{% endif %}{% if section.settings.rounded %} section--rounded relative{% endif %}">
+  <div class="ekko-product-showcase__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
+    <div
+      class="ekko-product-showcase ekko-product-showcase--{{ section.settings.layout_style }} product product--{{ section.settings.gallery_layout }}{% if placeholder == false and media_count == 0 %} no-media{% endif %}"
+      data-media-position="{{ section.settings.media_position }}"
+      data-mobile-media-position="{{ section.settings.mobile_media_position }}"
+      data-mode="{{ mode | default: 'featured' }}"
+    >
+      <div class="ekko-product-showcase__media product__gallery-container">
+        {%- if placeholder -%}
+          <div class="ekko-product-showcase__placeholder card media media--square" aria-hidden="true">
+            {{- 'product-1' | placeholder_svg_tag: 'placeholder' -}}
+          </div>
+        {%- elsif media_count > 0 -%}
+          {%- render 'product-media-gallery',
+            product: product_item,
+            product_id: product_id,
+            section_id: section.id,
+            gallery_layout: section.settings.gallery_layout,
+            thumbnail_position: section.settings.thumbnail_position,
+            image_ratio: section.settings.image_ratio,
+            image_ratio_mobile: section.settings.image_ratio_mobile,
+            image_zoom: section.settings.image_zoom,
+            image_fill: settings.product_image_fill,
+            mobile_layout: section.settings.mobile_layout,
+            mobile_thumbnail: section.settings.mobile_thumbnail,
+            hide_variants: section.settings.hide_variants,
+            enable_video_autoplay: section.settings.enable_video_autoplay,
+            enable_video_looping: section.settings.enable_video_looping,
+            first_3d_model: first_3d_model,
+            product_form_id: product_form_id
+          -%}
+        {%- endif -%}
+      </div>
+
+      <product-info
+        id="ProductInfo-{{ section.id }}-{{ product_id }}"
+        class="ekko-product-showcase__details product__info block{% if section.settings.enable_sticky_info %} sticky{% endif %}"
+        data-section-id="{{ section.id }}"
+        data-product-id="{{ product_id }}"
+        data-product-url="{{ product_item.url }}"
+        data-update-url="{% if mode == 'main' %}true{% else %}false{% endif %}"
+      >
+        {{- blocks_content -}}
+      </product-info>
+    </div>
+  </div>
+
+  {%- if first_3d_model -%}
+    <script type="application/json" id="ProductJSON-{{ product_id }}">
+      {{ product_item.media | where: 'media_type', 'model' | json }}
+    </script>
+  {%- endif -%}
+
+  {%- unless placeholder -%}
+    <script type="application/ld+json">{{ product_item | structured_data }}</script>
+  {%- endunless -%}
+</div>

@@ -1,0 +1,41 @@
+{%- liquid
+  assign breadcrumb_product = product_resource | default: product
+  if breadcrumb_product == blank
+    assign breadcrumb_product = section.settings.product
+  endif
+
+  assign breadcrumb_collection = collection
+  if breadcrumb_collection == blank and breadcrumb_product != blank
+    assign breadcrumb_collection = breadcrumb_product.collections | first
+  endif
+-%}
+
+<nav
+  class="product__breadcrumb breadcrumb{% unless block.settings.show_on_mobile %} hidden lg:flex{% endunless %}"
+  role="navigation"
+  aria-label="breadcrumbs"
+>
+  <ul class="inline-flex flex-wrap gap-4 md:gap-6">
+    <li class="flex items-center gap-4 md:gap-6">
+      <a class="block" href="{{ routes.root_url }}" title="{{ 'general.breadcrumbs.home_link_title' | t | escape }}">
+        {%- render 'icon', icon: 'home', size: 'sm' -%}
+        <span class="sr-only">{{ 'general.breadcrumbs.home_link_title' | t }}</span>
+      </a>
+    </li>
+    {%- if block.settings.show_collections_link -%}
+      <li class="flex items-center gap-4 md:gap-6">
+        <a class="reversed-link" href="{{ routes.collections_url }}">{{ 'general.breadcrumbs.collections' | t }}</a>
+      </li>
+    {%- endif -%}
+    {%- if breadcrumb_collection != blank -%}
+      <li class="flex items-center gap-4 md:gap-6">
+        <a class="reversed-link" href="{{ breadcrumb_collection.url }}">{{ breadcrumb_collection.title | escape }}</a>
+      </li>
+    {%- endif -%}
+    {%- if block.settings.show_product_title -%}
+      <li class="flex items-center gap-4 md:gap-6" aria-current="page">
+        {{- breadcrumb_product.title | default: page_title | escape -}}
+      </li>
+    {%- endif -%}
+  </ul>
+</nav>

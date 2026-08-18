@@ -1,0 +1,30 @@
+<div class="card product-card product-card--{{ settings.card_style }}{% if title_context == 'mega-menu' %} product-card--mega-menu{% endif %} flex flex-col leading-none relative"{% if title_context == 'mega-menu' %} style="--product-title-lines: {{ title_lines | default: 2 }};"{% endif %}>
+  <div class="product-card__media relative h-auto">
+    <a class="block relative media media--{{ image_ratio }} overflow-hidden" href="#" aria-label="{{ 'onboarding.product_title' | t | escape }}" tabindex="-1">
+      {{- placeholder | placeholder_svg_tag: 'placeholder' -}}
+    </a>
+  </div>
+  <div class="product-card__content grow flex flex-col justify-start text-{{ text_alignment }}">
+    {%- if show_vendor -%}
+      <div class="product-card__top w-full">
+        <span class="sr-only">{{ 'general.accessibility.vendor' | t }}</span>
+        <span class="caption reversed-link uppercase leading-none tracking-widest">{{ 'products.product.vendor' | t }}</span>
+      </div>
+    {%- endif -%}
+
+    <div class="product-card__details flex flex-col items-stretch gap-2 w-full">
+      <p class="product-card__title-row w-full">
+        <a class="product-card__title reversed-link text-base-xl font-medium leading-tight" href="#">{{ 'onboarding.product_title' | t }}</a>
+      </p>
+      {%- render 'product-price', placeholder: true, class: 'product-card__price-row flex flex-wrap gap-2 md:gap-1d5 w-full' -%}
+      {%- if show_rating -%}
+        <div class="rating product-card__rating flex items-center gap-2 md:gap-1d5 w-full pointer-events-none" title="{{ 'general.accessibility.star_reviews_count' | t: count: 2 | escape }}">
+          <span role="img" aria-label="{{ 'general.accessibility.star_reviews_info' | t: rating_value: 4.5, rating_max: 5 }}">
+            {%- render 'icon', icon: 'star', size: 'xs' -%}
+          </span>
+          4.5
+        </div>
+      {%- endif -%}
+    </div>
+  </div>
+</div>

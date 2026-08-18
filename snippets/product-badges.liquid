@@ -1,0 +1,79 @@
+{%- liquid
+  assign label_metafield_object = product.metafields.theme.label
+  if label_metafield != blank
+    assign label_metafield_parts = label_metafield | split: '.'
+    assign label_metafield_namespace = label_metafield_parts | first
+    assign label_metafield_key = label_metafield_parts | last
+    assign label_metafield_object = product.metafields[label_metafield_namespace][label_metafield_key]
+  endif
+
+  assign saved_amount = blank
+  if product.compare_at_price > product.price and show_save_amount
+    if save_type == 'label'
+      assign saved_amount = save_type
+    elsif save_type == 'dollar'
+      assign saved_amount = product.compare_at_price | minus: product.price | money
+    else
+      assign saved_amount = product.compare_at_price | minus: product.price | times: 100.0 | divided_by: product.compare_at_price | round
+      assign saved_amount = saved_amount | append: '%'
+    endif
+  endif
+
+  assign render_product_labels = true
+  if show_product_labels == false
+    assign render_product_labels = false
+  endif
+
+  assign has_product_labels = false
+  if render_product_labels and label_metafield_object.value != blank
+    assign has_product_labels = true
+  endif
+
+  assign has_sold_out_badge = false
+  if show_sold_out and product.available == false
+    assign has_sold_out_badge = true
+  endif
+-%}
+
+{%- if has_product_labels or saved_amount != blank or custom_label != blank or has_sold_out_badge -%}
+  <div class="badges{% if class != blank %} {{ class }}{% endif %} pointer-events-none">
+    {%- if has_product_labels -%}
+      {%- capture label_styles -%}
+        {%- if label_background != blank -%}
+          --badge-background: {{ label_background }}; --badge-foreground: {{ label_foreground | default: '#ffffff' }};
+        {%- elsif product.metafields.theme.label_color.value != blank and label_metafield == blank -%}
+          --badge-background: {{ product.metafields.theme.label_color.value }}; --badge-foreground: #ffffff;
+        {%- endif -%}
+      {%- endcapture -%}
+      {%- for label in label_metafield_object.value -%}
+        <span class="badge flex items-center gap-1d5 font-medium leading-none rounded-full"{% if label_styles != blank %} style="{{ label_styles }}"{% endif %}>
+          {{- label | escape -}}
+        </span>
+      {%- endfor -%}
+    {%- endif -%}
+
+    {%- if custom_label != blank -%}
+      <span class="badge flex items-center gap-1d5 font-medium leading-none rounded-full" style="--badge-background: {{ custom_background | default: '#171717' }}; --badge-foreground: {{ custom_foreground | default: '#ffffff' }};">
+        {{- custom_label | escape -}}
+      </span>
+    {%- endif -%}
+
+    {%- if saved_amount != blank -%}
+      <span class="badge badge--onsale flex items-center gap-1d5 font-medium leading-none rounded-full"{% if sale_background != blank %} style="--badge-background: {{ sale_background }}; --badge-foreground: {{ sale_foreground | default: '#ffffff' }};"{% endif %}>
+        {%- liquid
+          if save_type == 'label'
+            echo 'products.general.sale' | t
+          else
+            echo 'products.general.save_html' | t: saved_amount: saved_amount
+          endif
+        -%}
+      </span>
+    {%- endif -%}
+
+    {%- if has_sold_out_badge -%}
+      <span class="badge flex items-center gap-1d5 font-medium leading-none rounded-full" style="--badge-background: {{ sold_out_background | default: '#E9E9E7' }}; --badge-foreground: {{ sold_out_foreground | default: '#171717' }};">
+        {{- 'products.product.sold_out' | t -}}
+      </span>
+    {%- endif -%}
+  </div>
+{%- endif -%}
