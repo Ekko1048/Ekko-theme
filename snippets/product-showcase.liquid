@@ -5,7 +5,7 @@
   @param {product} product_resource - Product selected by the section or the product template.
   @param {string} blocks_content - Captured output from content_for 'blocks'.
   @param {section} section - Parent section object and its layout settings.
-  @param {string} [mode] - Either featured or main.
+  @param {string} [mode] - Either featured, main, or modal.
 {% enddoc %}
 
 {{ 'section-product-showcase.css' | asset_url | stylesheet_tag }}
@@ -22,15 +22,22 @@
   assign media_count = product_item.media.size
   assign first_media = product_item.selected_or_first_available_variant.featured_media | default: product_item.featured_media
   assign first_3d_model = product_item.media | where: 'media_type', 'model' | first
+  assign is_modal = false
+  if mode == 'modal'
+    assign is_modal = true
+  endif
 
   assign frame_class = 'page-width'
-  if section.settings.content_width == 'full' or section.settings.content_width == 'custom'
+  if is_modal
+    assign frame_class = ''
+  elsif section.settings.content_width == 'full' or section.settings.content_width == 'custom'
     assign frame_class = 'page-width page-width--full'
   endif
 -%}
 
 <style>
-  #shopify-section-{{ section.id }} {
+  #shopify-section-{{ section.id }},
+  [data-product-showcase-section="{{ section.id }}"] {
     --section-padding-top: {{ section.settings.padding_top }}px;
     --section-padding-bottom: {{ section.settings.padding_bottom }}px;
     --showcase-content-width: {{ section.settings.custom_content_width }}vw;
@@ -58,7 +65,10 @@
   <script src="{{ 'volume-pricing.js' | asset_url }}" defer="defer"></script>
 {%- endif -%}
 
-<div class="section ekko-product-showcase-section section--padding{% if section.settings.divider %} section--divider{% endif %}{% if section.settings.rounded %} section--rounded relative{% endif %}">
+<div
+  class="section ekko-product-showcase-section{% if is_modal %} ekko-product-showcase-section--modal{% else %} section--padding{% endif %}{% if section.settings.divider and is_modal == false %} section--divider{% endif %}{% if section.settings.rounded and is_modal == false %} section--rounded relative{% endif %}"
+  data-product-showcase-section="{{ section.id }}"
+>
   <div class="ekko-product-showcase__frame {{ frame_class }}" data-width="{{ section.settings.content_width }}">
     <div
       class="ekko-product-showcase ekko-product-showcase--{{ section.settings.layout_style }} product product--{{ section.settings.gallery_layout }}{% if placeholder == false and media_count == 0 %} no-media{% endif %}"
@@ -112,7 +122,7 @@
     </script>
   {%- endif -%}
 
-  {%- unless placeholder -%}
+  {%- unless placeholder or is_modal -%}
     <script type="application/ld+json">{{ product_item | structured_data }}</script>
   {%- endunless -%}
 </div>
