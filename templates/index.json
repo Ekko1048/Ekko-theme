@@ -1,0 +1,148 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "slideshow": {
+      "type": "slideshow",
+      "blocks": {
+        "image-1": {
+          "type": "image",
+          "settings": {
+            "heading": "Image slide",
+            "heading_size": "title-lg tracking-heading",
+            "heading_tag": "h2",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "primary",
+            "button_external": false,
+            "button_icon": false
+          }
+        },
+        "image-2": {
+          "type": "image",
+          "settings": {
+            "heading": "Image slide",
+            "heading_size": "title-lg tracking-heading",
+            "heading_tag": "h2",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "primary",
+            "button_external": false,
+            "button_icon": false
+          }
+        },
+        "image-3": {
+          "type": "image",
+          "settings": {
+            "heading": "Image slide",
+            "heading_size": "title-lg tracking-heading",
+            "heading_tag": "h2",
+            "button_label": "",
+            "button_link": "",
+            "button_style": "primary",
+            "button_external": false,
+            "button_icon": false
+          }
+        }
+      },
+      "block_order": ["image-1", "image-2", "image-3"],
+      "settings": {
+        "autoplay": false,
+        "autoplay_speed": 5,
+        "show_navigation": true,
+        "image_height": "650px",
+        "content_width": "small",
+        "image_height_mobile": "auto",
+        "color_text": "#ffffff",
+        "color_background": "#ffffff",
+        "gradient_background": "",
+        "color_button_text": "#171717",
+        "color_button_background": "#ffffff",
+        "color_button_gradient": "",
+        "color_overlay": "#171717",
+        "overlay_opacity": 20,
+        "padding_top": 0,
+        "padding_bottom": 0,
+        "divider": false,
+        "full_width": true,
+        "rounded": false,
+        "enable_parallax": false,
+        "parallax_direction": "vertical"
+      }
+    },
+    "featured_collections_pVKMqF": {
+      "type": "featured-collections",
+      "blocks": {
+        "collection_FVX6e7": {
+          "type": "collection",
+          "settings": {
+            "collection": "automated-collection",
+            "products": [],
+            "title": "Best sellers"
+          }
+        },
+        "collection_rhjFFh": {
+          "type": "collection",
+          "settings": {
+            "collection": "hydrogen",
+            "products": [],
+            "title": "New arrivals"
+          }
+        },
+        "collection_BaPAxw": {
+          "type": "collection",
+          "settings": {
+            "collection": "automated-collection",
+            "products": [],
+            "title": "Trending"
+          }
+        }
+      },
+      "block_order": ["collection_FVX6e7", "collection_rhjFFh", "collection_BaPAxw"],
+      "name": "t:sections.featured-collections.presets.name",
+      "settings": {
+        "product_limit": 8,
+        "columns": 4,
+        "card_gap": 24,
+        "carousel_on_desktop": true,
+        "show_view_all": true,
+        "tabs_style": "pills",
+        "columns_mobile": "1",
+        "card_gap_mobile": 16,
+        "swipe_on_mobile": true,
+        "heading": "Featured collections",
+        "heading_size": 56,
+        "heading_size_mobile": 38,
+        "heading_alignment": "left",
+        "heading_tag": "h2",
+        "subheading": "Shop by edit",
+        "description": "",
+        "highlighted_text": "none",
+        "highlighted_scribble": "circle",
+        "color_text": "#1C1C1C",
+        "color_background": "#FFFFFF",
+        "gradient_background": "",
+        "color_highlight": "#D7FF64",
+        "gradient_highlight": "",
+        "color_button_text": "",
+        "color_button_background": "",
+        "color_button_gradient": "",
+        "content_width": "page",
+        "custom_content_width": 90,
+        "padding_top": 72,
+        "padding_bottom": 72,
+        "divider": false,
+        "rounded": false,
+        "section_radius": 0
+      }
+    }
+  },
+  "order": ["slideshow", "featured_collections_pVKMqF"]
+}

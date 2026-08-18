@@ -1,0 +1,286 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "product",
+      "blocks": {
+        "breadcrumb": {
+          "type": "product-breadcrumb",
+          "settings": {}
+        },
+        "title": {
+          "type": "product-title",
+          "settings": {
+            "limit_width": false,
+            "text_wrap": "normal"
+          }
+        },
+        "rating": {
+          "type": "product-rating",
+          "settings": {}
+        },
+        "price": {
+          "type": "product-price",
+          "settings": {}
+        },
+        "inventory": {
+          "type": "product-inventory",
+          "settings": {
+            "inventory_style": "status_bar",
+            "inventory_threshold": 10,
+            "inventory_bar_max": 20,
+            "show_inventory_quantity": "always",
+            "show_inventory_transfer": true,
+            "in_stock_color": "#109B36",
+            "low_stock_color": "#109B36",
+            "bar_background_color": "#E5E7EB"
+          }
+        },
+        "description": {
+          "type": "product-description",
+          "settings": {}
+        },
+        "variants": {
+          "type": "product-variant-picker",
+          "settings": {}
+        },
+        "quantity": {
+          "type": "product-quantity-selector",
+          "settings": {}
+        },
+        "buy_buttons": {
+          "type": "product-buy-buttons",
+          "settings": {
+            "show_quantity_selector": false
+          }
+        },
+        "pickup": {
+          "type": "product-pickup",
+          "settings": {}
+        },
+        "share": {
+          "type": "product-share",
+          "settings": {
+            "share_label": "Share",
+            "show_help_desk": true,
+            "help_label": "Need help?",
+            "help_type": "drawer"
+          },
+          "blocks": {
+            "shipping_content": {
+              "type": "_product-help-content",
+              "settings": {
+                "icon": "rocket",
+                "heading": "Shipping <em>information</em>",
+                "text": "<p>Share delivery times, order processing details, and shipping policies.</p>",
+                "highlighted_text": "half_text",
+                "color_text": "#7C4A03",
+                "color_background": "#FFF8E8",
+                "color_highlight": "#FFD99A"
+              }
+            },
+            "customer_support": {
+              "type": "_product-help-item",
+              "settings": {
+                "icon": "email",
+                "heading": "Customer support",
+                "text": "<p>Send us a message and our team will help you.</p>",
+                "link_label": "Email us",
+                "link_type": "email"
+              }
+            },
+            "contact_help": {
+              "type": "_product-help-item",
+              "settings": {
+                "icon": "chat_bubble",
+                "heading": "More ways to get help",
+                "text": "<p>Find answers, delivery information, and store policies.</p>",
+                "link_label": "Contact us",
+                "link_type": "url"
+              }
+            }
+          },
+          "block_order": ["shipping_content", "customer_support", "contact_help"]
+        },
+        "details": {
+          "type": "product-accordion",
+          "settings": {
+            "heading": "Shipping and returns"
+          }
+        },
+        "sticky_buy": {
+          "type": "product-sticky-buy",
+          "settings": {
+            "enable": true,
+            "show_desktop": true,
+            "show_mobile": true,
+            "trigger": "buy_buttons",
+            "content_width": "page",
+            "desktop_layout": "detailed",
+            "mobile_dock_behavior": "replace",
+            "show_image": true,
+            "show_title": true,
+            "show_price": true,
+            "show_compare_price": true,
+            "show_options": true,
+            "variant_interaction": "quick_buy",
+            "show_quantity": true,
+            "button_label": "Add to cart"
+          }
+        }
+      },
+      "block_order": [
+        "breadcrumb",
+        "title",
+        "rating",
+        "price",
+        "inventory",
+        "description",
+        "variants",
+        "quantity",
+        "buy_buttons",
+        "pickup",
+        "share",
+        "details",
+        "sticky_buy"
+      ],
+      "settings": {}
+    },
+    "product_details": {
+      "type": "product-details",
+      "blocks": {
+        "description": {
+          "type": "_product-details-description",
+          "settings": {
+            "heading": "Product description",
+            "font_size": 16
+          }
+        },
+        "materials": {
+          "type": "_product-details-collapsible",
+          "settings": {
+            "heading": "Materials & construction",
+            "opened": true,
+            "image_position": "left",
+            "image_ratio": "1 / 1",
+            "image_fit": "contain",
+            "eyebrow": "Component details",
+            "row_style": "plain"
+          },
+          "blocks": {
+            "material": {
+              "type": "_product-details-spec-row",
+              "settings": {
+                "label": "Material",
+                "value": "Aircraft-grade aluminum"
+              }
+            },
+            "finish": {
+              "type": "_product-details-spec-row",
+              "settings": {
+                "label": "Finish",
+                "value": "Matte anodized"
+              }
+            },
+            "weight": {
+              "type": "_product-details-spec-row",
+              "settings": {
+                "label": "Weight",
+                "value": "240 g"
+              }
+            },
+            "materials_note": {
+              "type": "_product-details-note",
+              "settings": {
+                "text": "<p>Add a component image and replace these sample specifications with product information or product metafields.</p>"
+              }
+            }
+          },
+          "block_order": ["material", "finish", "weight", "materials_note"]
+        },
+        "compatibility": {
+          "type": "_product-details-collapsible",
+          "settings": {
+            "heading": "Size & compatibility",
+            "opened": false,
+            "image_position": "left",
+            "image_ratio": "4 / 3",
+            "image_fit": "contain",
+            "eyebrow": "Product specifications",
+            "row_style": "alternating"
+          },
+          "blocks": {
+            "dimensions": {
+              "type": "_product-details-spec-row",
+              "settings": {
+                "label": "Dimensions",
+                "value": "18 × 12 cm"
+              }
+            },
+            "compatible_models": {
+              "type": "_product-details-spec-row",
+              "settings": {
+                "label": "Compatibility",
+                "value": "Add compatible models"
+              }
+            }
+          },
+          "block_order": ["dimensions", "compatible_models"]
+        },
+        "included": {
+          "type": "_product-details-included",
+          "settings": {
+            "heading": "Included in the Box"
+          },
+          "blocks": {
+            "main_product": {
+              "type": "_product-details-included-item",
+              "settings": {
+                "heading": "Main product",
+                "quantity": 1
+              }
+            },
+            "accessory": {
+              "type": "_product-details-included-item",
+              "settings": {
+                "heading": "Accessory",
+                "quantity": 1
+              }
+            }
+          },
+          "block_order": ["main_product", "accessory"]
+        }
+      },
+      "block_order": ["description", "materials", "compatibility", "included"],
+      "settings": {
+        "heading": "Product details",
+        "heading_tag": "h2",
+        "sidebar_width": 380,
+        "open_first_row": true,
+        "single_open": false,
+        "content_width": "page",
+        "custom_content_width": 90,
+        "text_color": "#171717",
+        "background": "#FFFFFF",
+        "surface_color": "#F5F5F3",
+        "muted_color": "#ECECE8",
+        "divider": false,
+        "rounded": false,
+        "padding_top": 64,
+        "padding_bottom": 64
+      }
+    }
+  },
+  "order": [
+    "main",
+    "product_details"
+  ]
+}
