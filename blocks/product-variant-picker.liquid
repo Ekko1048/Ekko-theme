@@ -1,0 +1,42 @@
+{% doc %}
+  Product variant picker using the theme's existing variant interaction.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+-%}
+
+{%- if product_item != blank -%}
+  {%- render 'product-variant-picker',
+    block: block,
+    product: product_item,
+    product_id: product_id,
+    section_id: section.id,
+    product_form_id: product_form_id,
+    image_ratio: section.settings.image_ratio,
+    image_ratio_mobile: section.settings.image_ratio_mobile,
+    image_fill: settings.product_image_fill,
+    show_shopify_attributes: false
+  -%}
+{%- else -%}
+  <div class="ekko-product-block variant-picker grid gap-3">
+    <span class="form__label">Option</span>
+    <div class="ekko-product-showcase__placeholder-options" aria-hidden="true"><span>S</span><span>M</span><span>L</span></div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Variant picker",
+  "settings": [
+    { "type": "select", "id": "picker_type", "label": "Picker type", "options": [{ "value": "button", "label": "Buttons" }, { "value": "dropdown", "label": "Dropdown" }], "default": "button" },
+    { "type": "checkbox", "id": "show_variant_labels", "label": "Show variant labels", "default": true },
+    { "type": "checkbox", "id": "enable_color_swatches", "label": "Enable color swatches", "default": true },
+    { "type": "select", "id": "color_swatch_type", "label": "Color swatch style", "options": [{ "value": "color", "label": "Color" }, { "value": "variant", "label": "Variant image" }], "default": "color" },
+    { "type": "page", "id": "size_chart", "label": "Size chart page" }
+  ],
+  "presets": [{ "name": "Variant picker" }]
+}
+{% endschema %}

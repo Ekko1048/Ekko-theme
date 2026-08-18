@@ -1,0 +1,21 @@
+{% doc %}
+  Store pickup availability for the selected variant.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+-%}
+
+{%- if product_item != blank -%}
+  {%- render 'pickup-availability', block: block, product: product_item, product_id: product_id, section_id: section.id, product_form_id: product_form_id, show_shopify_attributes: false -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Pickup availability",
+  "settings": [],
+  "presets": [{ "name": "Pickup availability" }]
+}
+{% endschema %}

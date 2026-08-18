@@ -1,0 +1,150 @@
+{% doc %}
+  A repeatable help option rendered inside the Product Share drawer.
+{% enddoc %}
+
+{%- liquid
+  assign item_href = block.settings.link
+  if block.settings.link_type == 'email' and block.settings.email != blank
+    assign item_href = 'mailto:' | append: block.settings.email
+  elsif block.settings.link_type == 'phone' and block.settings.phone != blank
+    assign phone_href = block.settings.phone | replace: ' ', '' | replace: '(', '' | replace: ')', '' | replace: '-', ''
+    assign item_href = 'tel:' | append: phone_href
+  endif
+-%}
+
+<div
+  class="help-list__item ekko-product-help-item grid gap-2 md:gap-3 relative z-1"
+  data-product-help-entry
+  style="
+    --ekko-help-item-color: {{ block.settings.text_color | default: 'inherit' }};
+    --ekko-help-item-background: {{ block.settings.background | default: 'transparent' }};
+  "
+>
+  <div class="ekko-product-help-item__header flex items-center gap-3">
+    {%- if block.settings.custom_icon != blank -%}
+      {{ block.settings.custom_icon | image_url: width: 160 | image_tag:
+        loading: 'lazy',
+        widths: '40,64,96,128,160',
+        sizes: '32px',
+        class: 'ekko-product-help-item__custom-icon'
+      }}
+    {%- elsif block.settings.icon != 'none' -%}
+      {%- render 'icon-guarantee', icon: block.settings.icon, class: 'ekko-product-help-item__icon' -%}
+    {%- endif -%}
+
+    {%- if block.settings.heading != blank -%}
+      <p class="h4 font-medium leading-tight md:text-lg">{{ block.settings.heading | escape }}</p>
+    {%- endif -%}
+  </div>
+
+  {%- if block.settings.text != blank -%}
+    <div class="rte text-sm">{{ block.settings.text }}</div>
+  {%- endif -%}
+
+  {%- if block.settings.link_label != blank -%}
+    <a
+      class="link text-sm"
+      {% if item_href != blank %}
+        href="{{ item_href }}"
+        {% if block.settings.link_type == 'url' and block.settings.open_in_new_tab %}target="_blank" rel="noopener noreferrer"{% endif %}
+      {% else %}
+        role="link"
+        aria-disabled="true"
+      {% endif %}
+    >
+      {{- block.settings.link_label | escape -}}
+    </a>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .ekko-product-help-entry {
+    display: block;
+    min-width: 0;
+  }
+
+  .ekko-product-help-item {
+    color: var(--ekko-help-item-color);
+    background: var(--ekko-help-item-background);
+  }
+
+  .ekko-product-help-item__header:empty {
+    display: none;
+  }
+
+  .ekko-product-help-item__custom-icon,
+  .ekko-product-help-item__header > .icon {
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    object-fit: contain;
+  }
+
+  .ekko-product-help-item > .rte,
+  .ekko-product-help-item > .link {
+    margin-inline-start: 2.75rem;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-product-help-item > .rte,
+    .ekko-product-help-item > .link {
+      margin-inline-start: 0;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Help item",
+  "tag": "li",
+  "class": "ekko-product-help-entry",
+  "settings": [
+    {
+      "type": "select",
+      "id": "icon",
+      "label": "Icon",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "email", "label": "Email" },
+        { "value": "phone", "label": "Phone" },
+        { "value": "chat_bubble", "label": "Chat" },
+        { "value": "headphone", "label": "Support" },
+        { "value": "file_text", "label": "Information" },
+        { "value": "truck", "label": "Delivery" },
+        { "value": "return", "label": "Returns" },
+        { "value": "box", "label": "Package" },
+        { "value": "shield", "label": "Warranty" },
+        { "value": "map_pin", "label": "Store location" },
+        { "value": "time", "label": "Business hours" }
+      ],
+      "default": "chat_bubble"
+    },
+    { "type": "image_picker", "id": "custom_icon", "label": "Custom icon", "info": "Overrides the selected icon." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Help option" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Add useful information for this help option.</p>" },
+    { "type": "header", "content": "Link" },
+    { "type": "text", "id": "link_label", "label": "Link label", "default": "Learn more" },
+    {
+      "type": "select",
+      "id": "link_type",
+      "label": "Link type",
+      "options": [
+        { "value": "url", "label": "Page or URL" },
+        { "value": "email", "label": "Email" },
+        { "value": "phone", "label": "Phone" }
+      ],
+      "default": "url"
+    },
+    { "type": "url", "id": "link", "label": "Page or URL" },
+    { "type": "text", "id": "email", "label": "Email address" },
+    { "type": "text", "id": "phone", "label": "Phone number" },
+    { "type": "checkbox", "id": "open_in_new_tab", "label": "Open URL in a new tab", "default": false },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "text_color", "label": "Text" },
+    { "type": "color", "id": "background", "label": "Background" }
+  ],
+  "presets": [
+    { "name": "Help item" }
+  ]
+}
+{% endschema %}

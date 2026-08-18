@@ -1,0 +1,815 @@
+{% doc %}
+  Renders a responsive sticky purchase surface for the main product section.
+  The Theme block remains in its Shopify editor wrapper; only ordinary drawer
+  content may be portalled by the theme's existing drawer element.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+  assign sticky_id = 'ProductStickyForm-' | append: section.id | append: '-' | append: product_id
+  assign quick_view_id = 'ProductStickyQuickView-' | append: section.id | append: '-' | append: block.id
+  assign current_variant = product_item.selected_or_first_available_variant
+  assign featured_media = current_variant.featured_media | default: product_item.featured_media
+  assign sticky_image = featured_media.preview_image | default: featured_media
+  assign available_label = block.settings.button_label
+  if available_label == blank
+    assign available_label = 'products.product.add_to_cart' | t
+  endif
+-%}
+
+{%- if product_item != blank and block.settings.enable -%}
+  <product-sticky-form
+    id="{{ sticky_id }}"
+    class="ekko-sticky-buy"
+    form="{{ product_form_id }}"
+    data-block-id="{{ block.id }}"
+    data-trigger="{{ block.settings.trigger }}"
+    data-scroll-distance="{{ block.settings.scroll_distance }}"
+    data-show-desktop="{{ block.settings.show_desktop }}"
+    data-show-mobile="{{ block.settings.show_mobile }}"
+    data-mobile-dock="{{ block.settings.mobile_dock_behavior }}"
+    data-quick-view-id="{{ quick_view_id }}"
+    data-variant-interaction="{{ block.settings.variant_interaction }}"
+    data-section-id="{{ section.id }}"
+    data-product-id="{{ product_id }}"
+    {{ block.shopify_attributes }}
+    style="
+      --sticky-custom-width: {{ block.settings.custom_content_width }}vw;
+      --sticky-bottom-gap: {{ block.settings.bottom_spacing }}px;
+      --sticky-radius: {{ block.settings.corner_radius }}px;
+      --sticky-background: {{ block.settings.background }};
+      --sticky-text: {{ block.settings.text_color }};
+      --sticky-button-background: {{ block.settings.button_background }};
+      --sticky-button-text: {{ block.settings.button_text_color }};
+      --sticky-button-hover-background: {{ block.settings.button_hover_background }};
+      --sticky-button-hover-text: {{ block.settings.button_hover_text_color }};
+      --sticky-shadow-opacity: {{ block.settings.shadow_opacity | divided_by: 100.0 }};
+    "
+  >
+    <div
+      class="ekko-sticky-buy__card"
+      data-content-width="{{ block.settings.content_width }}"
+      data-desktop-layout="{{ block.settings.desktop_layout }}"
+      data-show-compare="{{ block.settings.show_compare_price }}"
+      {% if block.settings.enable_blur %}data-blur{% endif %}
+    >
+      <div class="ekko-sticky-buy__product">
+        {%- if block.settings.show_options and product_item.has_only_default_variant == false -%}
+          <button
+            type="button"
+            class="ekko-sticky-buy__product-trigger"
+            data-sticky-quick-view-trigger
+            aria-controls="{{ quick_view_id }}"
+            aria-expanded="false"
+            aria-label="{{ 'products.product.choose_product_options' | t: product_name: product_item.title | escape }}"
+          ></button>
+        {%- endif -%}
+
+        {%- if block.settings.show_image and sticky_image != blank -%}
+          <div class="ekko-sticky-buy__media" data-sticky-product-media data-widths="96,192,288">
+            {{-
+              sticky_image
+              | image_url: width: 288
+              | image_tag:
+                loading: 'lazy',
+                widths: '96,192,288',
+                sizes: '72px',
+                alt: product_item.title
+            -}}
+          </div>
+        {%- endif -%}
+
+        <div class="ekko-sticky-buy__identity">
+          {%- if block.settings.show_title -%}
+            <p class="ekko-sticky-buy__title">{{ product_item.title | escape }}</p>
+          {%- endif -%}
+          <div class="ekko-sticky-buy__meta">
+            {%- if block.settings.show_price -%}
+              <div class="ekko-sticky-buy__price" id="StickyPrice-{{ section.id }}-{{ product_id }}">
+                {%- render 'product-price', product: product_item, use_variant: true, skip_to_price: true, class: 'flex flex-wrap items-baseline gap-2' -%}
+              </div>
+            {%- endif -%}
+            {%- unless product_item.has_only_default_variant -%}
+              <p class="ekko-sticky-buy__selected">
+                <span data-sticky-product-options>{{ current_variant.title | escape }}</span>
+                {%- if block.settings.show_options -%}
+                  <span class="ekko-sticky-buy__change" aria-hidden="true">
+                    {%- render 'icon', icon: 'chevron-right', size: 'xs', class: 'stroke-2' -%}
+                  </span>
+                {%- endif -%}
+              </p>
+            {%- endunless -%}
+          </div>
+        </div>
+      </div>
+
+      <div class="ekko-sticky-buy__actions">
+        {%- if block.settings.show_options and product_item.has_only_default_variant == false -%}
+          <div class="ekko-sticky-buy__inline-options" aria-label="{{ 'products.product.product_variants' | t | escape }}">
+            {%- for option in product_item.options_with_values -%}
+              <label class="ekko-sticky-buy__select-wrap">
+                <span class="sr-only">{{ option.name | escape }}</span>
+                <select class="ekko-sticky-buy__select" data-sticky-option-select data-option-position="{{ option.position }}">
+                  {%- for value in option.values -%}
+                    <option
+                      value="{{ value | escape }}"
+                      data-option-value-id="{{ value.id }}"
+                      {% if option.selected_value == value %}selected{% endif %}
+                    >
+                      {{- value -}}
+                    </option>
+                  {%- endfor -%}
+                </select>
+              </label>
+            {%- endfor -%}
+          </div>
+
+          <button
+            class="ekko-sticky-buy__options-button"
+            type="button"
+            data-sticky-quick-view-trigger
+            aria-controls="{{ quick_view_id }}"
+            aria-expanded="false"
+          >
+            <span class="ekko-sticky-buy__options-copy">
+              <span>{{ 'products.product.choose_options' | t }}</span>
+              <small data-sticky-product-options>{{ current_variant.title | escape }}</small>
+            </span>
+            <span class="ekko-sticky-buy__options-chevron" aria-hidden="true">⌃</span>
+          </button>
+        {%- endif -%}
+
+        {%- if block.settings.show_quantity -%}
+          <div class="ekko-sticky-buy__quantity" aria-label="{{ 'products.quantity.label' | t | escape }}">
+            <button type="button" data-sticky-quantity-minus aria-label="{{ 'products.quantity.decrease' | t: product: product_item.title | escape }}">−</button>
+            <input
+              type="number"
+              inputmode="numeric"
+              autocomplete="off"
+              data-sticky-quantity
+              value="{{ current_variant.quantity_rule.min | default: 1 }}"
+              min="{{ current_variant.quantity_rule.min | default: 1 }}"
+              step="{{ current_variant.quantity_rule.increment | default: 1 }}"
+              {% if current_variant.quantity_rule.max != null %}max="{{ current_variant.quantity_rule.max }}"{% endif %}
+              aria-label="{{ 'products.quantity.label' | t | escape }}"
+            >
+            <button type="button" data-sticky-quantity-plus aria-label="{{ 'products.quantity.increase' | t: product: product_item.title | escape }}">+</button>
+          </div>
+        {%- endif -%}
+
+        <button
+          type="submit"
+          name="add"
+          form="{{ product_form_id }}"
+          class="ekko-sticky-buy__submit"
+          data-available-label="{{ available_label | escape }}"
+          {% unless current_variant.available %}disabled{% endunless %}
+        >
+          <span class="btn-text"><span data-sold-out="{{ 'products.product.sold_out' | t | escape }}">
+            {%- if current_variant.available -%}{{ available_label }}{%- else -%}{{ 'products.product.sold_out' | t }}{%- endif -%}
+          </span></span>
+        </button>
+      </div>
+
+      <div class="ekko-sticky-buy__error product-form__error-message" role="alert" hidden></div>
+    </div>
+
+    {%- if block.settings.show_options and product_item.has_only_default_variant == false -%}
+      <quick-view
+        id="{{ quick_view_id }}"
+        class="quick-view ekko-sticky-quick-view x-modal drawer z-40 fixed bottom-0 left-0 h-full w-full pointer-events-none"
+        data-product-url="{{ product_item.url }}?variant={{ current_variant.id }}"
+        role="dialog"
+        aria-modal="true"
+        aria-label="{{ 'products.product.choose_product_options' | t: product_name: product_item.title | escape }}"
+        hidden
+      >
+        <overlay-element class="overlay fixed-modal invisible opacity-0 fixed bottom-0 left-0 w-full h-screen pointer-events-none" aria-controls="{{ quick_view_id }}" aria-expanded="false"></overlay-element>
+        <div class="drawer__inner z-10 absolute top-0 flex flex-col w-full h-full overflow-hidden">
+          <gesture-element class="drawer__header flex justify-between opacity-0 invisible relative">
+            <span class="ekko-sticky-quick-view__handle" aria-hidden="true"></span>
+            <button class="button button--secondary button--close drawer__close flex items-center justify-center" type="button" aria-controls="{{ quick_view_id }}" aria-expanded="false" aria-label="{{ 'general.accessibility.close' | t | escape }}">
+              <span class="btn-text">{%- render 'icon', icon: 'close', size: 'sm' -%}</span>
+            </button>
+          </gesture-element>
+          <div class="quick-view__content drawer__content opacity-0 invisible flex flex-col h-full grow shrink"></div>
+        </div>
+      </quick-view>
+    {%- endif -%}
+  </product-sticky-form>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-sticky-buy-anchor {
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .ekko-sticky-buy {
+    position: fixed;
+    z-index: 26;
+    inset-inline: 0;
+    inset-block-end: var(--sticky-bottom-gap, 20px);
+    padding-inline: var(--page-padding);
+    pointer-events: none;
+  }
+
+  .ekko-sticky-buy[data-sticky-anchor] {
+    position: static;
+    inset: auto;
+    width: 0;
+    height: 0;
+    padding: 0;
+  }
+
+  .ekko-sticky-buy__card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: clamp(16px, 2vw, 32px);
+    width: 100%;
+    max-width: var(--page-container);
+    margin-inline: auto;
+    padding: 12px;
+    color: var(--sticky-text);
+    background: color-mix(in srgb, var(--sticky-background) 96%, transparent);
+    border-radius: var(--sticky-radius);
+    box-shadow: 0 18px 54px rgb(0 0 0 / var(--sticky-shadow-opacity));
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(calc(100% + var(--sticky-bottom-gap) + 12px));
+    transition: opacity 200ms ease, visibility 200ms ease, transform 220ms cubic-bezier(.2,.8,.2,1);
+    pointer-events: auto;
+  }
+
+  .ekko-sticky-buy__card[data-blur] {
+    -webkit-backdrop-filter: blur(18px) saturate(1.15);
+    backdrop-filter: blur(18px) saturate(1.15);
+  }
+
+  .ekko-sticky-buy[visible] .ekko-sticky-buy__card {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .ekko-sticky-buy__card[data-content-width='full'] {
+    max-width: none;
+  }
+
+  .ekko-sticky-buy__card[data-content-width='custom'] {
+    max-width: var(--sticky-custom-width);
+  }
+
+  .ekko-sticky-buy__product,
+  .ekko-sticky-buy__actions,
+  .ekko-sticky-buy__inline-options {
+    display: flex;
+    align-items: center;
+  }
+
+  .ekko-sticky-buy__product {
+    position: relative;
+    gap: 14px;
+    min-width: 0;
+  }
+
+  .ekko-sticky-buy__product-trigger {
+    display: none;
+  }
+
+  .ekko-sticky-buy__media {
+    flex: 0 0 64px;
+    width: 64px;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: max(8px, calc(var(--sticky-radius) - 8px));
+    background: rgb(0 0 0 / .035);
+  }
+
+  .ekko-sticky-buy__media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .ekko-sticky-buy__identity {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  .ekko-sticky-buy__meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .ekko-sticky-buy__title,
+  .ekko-sticky-buy__selected,
+  .ekko-sticky-options__product {
+    margin: 0;
+  }
+
+  .ekko-sticky-buy__selected {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    white-space: nowrap;
+  }
+
+  .ekko-sticky-buy__change {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    font-weight: 650;
+  }
+
+  .ekko-sticky-buy__change .icon {
+    width: 12px;
+    height: 12px;
+  }
+
+  .ekko-sticky-buy__title {
+    overflow: hidden;
+    font-weight: 650;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ekko-sticky-buy__selected,
+  .ekko-sticky-options__product {
+    color: color-mix(in srgb, currentColor 62%, transparent);
+    font-size: 12px;
+    line-height: 1.3;
+  }
+
+  .ekko-sticky-buy__price .price {
+    font-size: 14px;
+    line-height: 1.2;
+  }
+
+  .ekko-sticky-buy__card[data-show-compare='false'] .price__sale {
+    display: none;
+  }
+
+  .ekko-sticky-buy__actions {
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .ekko-sticky-buy__inline-options {
+    gap: 8px;
+  }
+
+  .ekko-sticky-buy__select-wrap {
+    display: block;
+  }
+
+  .ekko-sticky-buy__select,
+  .ekko-sticky-buy__options-button {
+    min-height: 46px;
+    color: currentColor;
+    background: color-mix(in srgb, currentColor 6%, transparent);
+    border: 0;
+    border-radius: max(8px, calc(var(--sticky-radius) - 8px));
+  }
+
+  .ekko-sticky-buy__select {
+    max-width: 150px;
+    padding: 0 34px 0 14px;
+  }
+
+  .ekko-sticky-buy__options-button {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    min-width: 190px;
+    padding: 7px 14px;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .ekko-sticky-buy[data-variant-interaction='quick_buy'] .ekko-sticky-buy__inline-options {
+    display: none;
+  }
+
+  .ekko-sticky-buy[data-variant-interaction='quick_buy'] .ekko-sticky-buy__options-button {
+    display: flex;
+  }
+
+  .ekko-sticky-buy__options-copy {
+    display: grid;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .ekko-sticky-buy__options-copy > span {
+    font-size: 11px;
+    font-weight: 650;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+
+  .ekko-sticky-buy__options-copy small {
+    overflow: hidden;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .ekko-sticky-buy__quantity {
+    display: grid;
+    grid-template-columns: 34px 38px 34px;
+    align-items: center;
+    min-height: 46px;
+    overflow: hidden;
+    border-radius: max(8px, calc(var(--sticky-radius) - 8px));
+    background: color-mix(in srgb, currentColor 6%, transparent);
+  }
+
+  .ekko-sticky-buy__quantity button,
+  .ekko-sticky-buy__quantity input {
+    width: 100%;
+    height: 46px;
+    padding: 0;
+    color: currentColor;
+    background: transparent;
+    border: 0;
+    text-align: center;
+  }
+
+  .ekko-sticky-buy__quantity button {
+    font-size: 20px;
+    cursor: pointer;
+  }
+
+  .ekko-sticky-buy__quantity input {
+    -moz-appearance: textfield;
+  }
+
+  .ekko-sticky-buy__quantity input::-webkit-outer-spin-button,
+  .ekko-sticky-buy__quantity input::-webkit-inner-spin-button {
+    margin: 0;
+    -webkit-appearance: none;
+  }
+
+  .ekko-sticky-buy__submit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 154px;
+    min-height: 48px;
+    padding: 12px 22px;
+    color: var(--sticky-button-text, #fff);
+    background: var(--sticky-button-background, #171717);
+    border: 0;
+    border-radius: max(8px, calc(var(--sticky-radius) - 7px));
+    font: inherit;
+    font-weight: 650;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 160ms ease, background-color 160ms ease, transform 160ms ease;
+  }
+
+  .ekko-sticky-buy__submit:hover {
+    color: var(--sticky-button-hover-text, #fff);
+    background: var(--sticky-button-hover-background, #333);
+  }
+
+  .ekko-sticky-buy__submit:active {
+    transform: translateY(1px);
+  }
+
+  .ekko-sticky-buy__submit:disabled,
+  .ekko-sticky-buy__submit[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: .5;
+  }
+
+  .ekko-sticky-buy__error {
+    position: absolute;
+    inset-inline: 12px;
+    inset-block-end: calc(100% + 8px);
+    padding: 9px 12px;
+    color: #8b1f1f;
+    background: #fff0f0;
+    border-radius: 10px;
+    font-size: 13px;
+    box-shadow: 0 10px 30px rgb(0 0 0 / .1);
+  }
+
+  .ekko-sticky-options__scroll {
+    gap: 26px;
+    padding: 24px var(--page-padding) 32px;
+  }
+
+  .ekko-sticky-options__group {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .ekko-sticky-options__group legend {
+    margin-block-end: 12px;
+    font-size: 14px;
+  }
+
+  .ekko-sticky-options__values {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .ekko-sticky-options__value {
+    min-height: 44px;
+    padding: 10px 15px;
+    color: inherit;
+    background: rgb(var(--color-foreground) / .055);
+    border: 0;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .ekko-sticky-options__value[aria-pressed='true'] {
+    color: rgb(var(--color-background));
+    background: rgb(var(--color-foreground));
+  }
+
+  .ekko-sticky-options__value.is-unavailable {
+    text-decoration: line-through;
+    opacity: .45;
+  }
+
+  .ekko-sticky-options__footer {
+    padding: 12px var(--page-padding) max(12px, env(safe-area-inset-bottom));
+    background: rgb(var(--color-background));
+    box-shadow: 0 -12px 30px rgb(0 0 0 / .06);
+  }
+
+  .ekko-sticky-options__footer .ekko-sticky-buy__submit {
+    width: 100%;
+    color: rgb(var(--color-button-text));
+    background: rgb(var(--color-button-background));
+  }
+
+  @media screen and (max-width: 1023px) {
+    .ekko-sticky-buy__card[data-desktop-layout='compact'] .ekko-sticky-buy__media,
+    .ekko-sticky-buy__card[data-desktop-layout='compact'] .ekko-sticky-buy__selected {
+      display: none;
+    }
+
+    .ekko-sticky-buy__select {
+      max-width: 120px;
+    }
+  }
+
+  @media screen and (max-width: 767px) {
+    .ekko-sticky-buy {
+      inset-block-end: max(var(--sticky-bottom-gap), env(safe-area-inset-bottom));
+      padding-inline: 8px;
+    }
+
+    .ekko-sticky-buy[data-show-mobile='false'] {
+      display: none;
+    }
+
+    body:has(.mobile-dock-section.active) .ekko-sticky-buy--portal[data-mobile-dock='above'],
+    body:has(.mobile-dock-section.shopify-active) .ekko-sticky-buy--portal[data-mobile-dock='above'] {
+      inset-block-end: calc(max(var(--sticky-bottom-gap), env(safe-area-inset-bottom)) + var(--mobile-dock-height, 0px));
+    }
+
+    body.ekko-sticky-buy-active .mobile-dock,
+    body.ekko-sticky-quick-view-open .mobile-dock {
+      transform: translateY(calc(100% + env(safe-area-inset-bottom))) !important;
+      pointer-events: none;
+    }
+
+    .ekko-sticky-buy__card,
+    .ekko-sticky-buy__card[data-content-width='custom'] {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      max-width: none;
+      min-height: 68px;
+      padding: 8px 10px;
+      border-radius: min(var(--sticky-radius), 16px);
+      background: color-mix(in srgb, var(--sticky-background) 98%, transparent);
+      box-shadow: 0 12px 34px rgb(0 0 0 / max(var(--sticky-shadow-opacity), .12));
+    }
+
+    .ekko-sticky-buy__media {
+      display: block;
+      flex-basis: 44px;
+      width: 44px;
+      border-radius: max(8px, calc(min(var(--sticky-radius), 16px) - 7px));
+    }
+
+    .ekko-sticky-buy__identity {
+      gap: 2px;
+    }
+
+    .ekko-sticky-buy__title {
+      font-size: 14px;
+    }
+
+    .ekko-sticky-buy__meta {
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .ekko-sticky-buy__selected {
+      gap: 4px;
+      overflow: hidden;
+      font-size: 11px;
+    }
+
+    .ekko-sticky-buy__selected::before {
+      content: '·';
+      flex: 0 0 auto;
+    }
+
+    .ekko-sticky-buy__selected > [data-sticky-product-options] {
+      overflow: hidden;
+      max-width: 58px;
+      text-overflow: ellipsis;
+    }
+
+    .ekko-sticky-buy__change {
+      flex: 0 0 auto;
+      color: currentColor;
+    }
+
+    .ekko-sticky-buy__price .price {
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .ekko-sticky-buy__product-trigger {
+      display: block;
+      z-index: 2;
+      position: absolute;
+      inset: -4px;
+      padding: 0;
+      background: transparent;
+      border: 0;
+      border-radius: inherit;
+      cursor: pointer;
+    }
+
+    .ekko-sticky-buy__product-trigger:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+    }
+
+    .ekko-sticky-buy__actions {
+      gap: 7px;
+    }
+
+    .ekko-sticky-buy__inline-options,
+    .ekko-sticky-buy__quantity {
+      display: none !important;
+    }
+
+    .ekko-sticky-buy[data-variant-interaction='quick_buy'] .ekko-sticky-buy__options-button,
+    .ekko-sticky-buy[data-variant-interaction='inline'] .ekko-sticky-buy__options-button {
+      display: none;
+    }
+
+    .ekko-sticky-buy__submit {
+      z-index: 3;
+      min-width: 112px;
+      min-height: 48px;
+      padding: 10px 14px;
+      border-radius: max(8px, calc(min(var(--sticky-radius), 16px) - 6px));
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .ekko-sticky-quick-view .drawer__inner {
+      height: min(92dvh, 900px);
+      max-height: calc(100dvh - 24px);
+      border-start-start-radius: 24px;
+      border-start-end-radius: 24px;
+    }
+
+    .ekko-sticky-quick-view .drawer__header {
+      min-height: 30px;
+      padding: 0;
+    }
+
+    .js .ekko-sticky-quick-view .drawer__close {
+      clip: auto;
+      z-index: 4;
+      position: absolute;
+      inset-block-start: 12px;
+      inset-inline-end: 12px;
+      width: 40px;
+      height: 40px;
+      margin: 0;
+      padding: 0;
+      overflow: visible;
+      background: rgb(var(--color-background) / .92);
+      border-radius: 50%;
+      box-shadow: 0 6px 20px rgb(0 0 0 / .1);
+    }
+
+    .ekko-sticky-quick-view .quick-view__content {
+      height: auto;
+      overscroll-behavior: contain;
+    }
+
+    .ekko-sticky-quick-view .product__info {
+      padding-block-end: calc(160px + env(safe-area-inset-bottom));
+    }
+
+    .ekko-sticky-quick-view .product-form-wrapper[data-quick-view-purchase] {
+      z-index: 3;
+      position: absolute;
+      inset-inline: 0;
+      inset-block-end: 0;
+      margin-inline: 0;
+      padding: 12px var(--page-padding) max(12px, env(safe-area-inset-bottom));
+      background: color-mix(in srgb, rgb(var(--color-background)) 94%, transparent);
+      box-shadow: 0 -12px 30px rgb(0 0 0 / .08);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+    }
+
+    .ekko-sticky-quick-view .product__more {
+      position: static;
+    }
+
+    body.ekko-sticky-quick-view-open .ekko-sticky-buy--portal {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+  }
+
+  @media screen and (min-width: 768px) {
+    .ekko-sticky-buy[data-show-desktop='false'] {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-sticky-buy__card {
+      transition: opacity 1ms linear, visibility 1ms linear;
+      transform: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Sticky buy",
+  "tag": null,
+  "settings": [
+    { "type": "checkbox", "id": "enable", "label": "Enable sticky buy", "default": true },
+    { "type": "checkbox", "id": "show_desktop", "label": "Show on desktop", "default": true },
+    { "type": "checkbox", "id": "show_mobile", "label": "Show on mobile", "default": true },
+    { "type": "select", "id": "trigger", "label": "Show when", "options": [{ "value": "buy_buttons", "label": "Main buy buttons leave view" }, { "value": "scroll", "label": "After scroll distance" }, { "value": "always", "label": "Always" }], "default": "buy_buttons" },
+    { "type": "range", "id": "scroll_distance", "label": "Scroll distance", "min": 100, "max": 1600, "step": 50, "unit": "px", "default": 500, "visible_if": "{{ block.settings.trigger == 'scroll' }}" },
+
+    { "type": "header", "content": "Layout" },
+    { "type": "select", "id": "content_width", "label": "Content width", "options": [{ "value": "page", "label": "Page width" }, { "value": "full", "label": "Full width" }, { "value": "custom", "label": "Custom" }], "default": "page" },
+    { "type": "range", "id": "custom_content_width", "label": "Custom content width", "min": 70, "max": 100, "step": 1, "unit": "%", "default": 90, "visible_if": "{{ block.settings.content_width == 'custom' }}" },
+    { "type": "select", "id": "desktop_layout", "label": "Desktop layout", "options": [{ "value": "detailed", "label": "Detailed" }, { "value": "compact", "label": "Compact" }], "default": "detailed" },
+    { "type": "select", "id": "mobile_dock_behavior", "label": "Mobile dock behavior", "options": [{ "value": "replace", "label": "Replace mobile dock" }, { "value": "above", "label": "Show above mobile dock" }], "default": "replace" },
+    { "type": "range", "id": "bottom_spacing", "label": "Bottom spacing", "min": 0, "max": 48, "step": 2, "unit": "px", "default": 16 },
+
+    { "type": "header", "content": "Product content" },
+    { "type": "checkbox", "id": "show_image", "label": "Show image", "default": true },
+    { "type": "checkbox", "id": "show_title", "label": "Show title", "default": true },
+    { "type": "checkbox", "id": "show_price", "label": "Show price", "default": true },
+    { "type": "checkbox", "id": "show_compare_price", "label": "Show compare-at price", "default": true, "visible_if": "{{ block.settings.show_price }}" },
+    { "type": "checkbox", "id": "show_options", "label": "Show product options", "default": true },
+    { "type": "select", "id": "variant_interaction", "label": "Desktop option interaction", "options": [{ "value": "quick_buy", "label": "Quick buy popup" }, { "value": "inline", "label": "Inline selectors" }], "default": "quick_buy", "visible_if": "{{ block.settings.show_options }}" },
+    { "type": "checkbox", "id": "show_quantity", "label": "Show quantity on desktop", "default": true },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Add to cart" },
+
+    { "type": "header", "content": "Colors and shape" },
+    { "type": "color", "id": "background", "label": "Background", "default": "#FFFFFF" },
+    { "type": "color", "id": "text_color", "label": "Text", "default": "#171717" },
+    { "type": "color", "id": "button_background", "label": "Button background", "default": "#171717" },
+    { "type": "color", "id": "button_text_color", "label": "Button text", "default": "#FFFFFF" },
+    { "type": "color", "id": "button_hover_background", "label": "Button hover background", "default": "#333333" },
+    { "type": "color", "id": "button_hover_text_color", "label": "Button hover text", "default": "#FFFFFF" },
+    { "type": "range", "id": "corner_radius", "label": "Corner radius", "min": 0, "max": 32, "step": 2, "unit": "px", "default": 18 },
+    { "type": "checkbox", "id": "enable_blur", "label": "Enable background blur", "default": true },
+    { "type": "range", "id": "shadow_opacity", "label": "Shadow opacity", "min": 0, "max": 30, "step": 1, "unit": "%", "default": 14 }
+  ],
+  "presets": [{ "name": "Sticky buy" }]
+}
+{% endschema %}

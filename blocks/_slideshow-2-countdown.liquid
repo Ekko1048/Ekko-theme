@@ -1,0 +1,105 @@
+{% doc %}
+  Renders a timezone-aware countdown inside a Slideshow 2 slide.
+{% enddoc %}
+
+{%- capture block_content -%}
+  <div
+    class="slideshow-2__countdown slideshow-2__countdown--{{ block.settings.style }}"
+    data-countdown
+    data-date="{{ block.settings.end_date | escape }}"
+    data-time="{{ block.settings.end_time | escape }}"
+    data-timezone="{{ block.settings.timezone | escape }}"
+    data-expired-behavior="{{ block.settings.expired_behavior }}"
+    style="--s2-countdown-size: {{ block.settings.number_size }}px; --s2-countdown-size-mobile: {{ block.settings.number_size_mobile }}px;"
+  >
+    <div class="slideshow-2__countdown-values" data-countdown-values>
+      <div class="slideshow-2__countdown-unit"><strong data-countdown-days>00</strong>{% if block.settings.show_labels %}<span>{{ 'sections.slideshow_2.countdown.days' | t }}</span>{% endif %}</div>
+      <div class="slideshow-2__countdown-unit"><strong data-countdown-hours>00</strong>{% if block.settings.show_labels %}<span>{{ 'sections.slideshow_2.countdown.hours' | t }}</span>{% endif %}</div>
+      <div class="slideshow-2__countdown-unit"><strong data-countdown-minutes>00</strong>{% if block.settings.show_labels %}<span>{{ 'sections.slideshow_2.countdown.minutes' | t }}</span>{% endif %}</div>
+      <div class="slideshow-2__countdown-unit"><strong data-countdown-seconds>00</strong>{% if block.settings.show_labels %}<span>{{ 'sections.slideshow_2.countdown.seconds' | t }}</span>{% endif %}</div>
+    </div>
+    <p class="slideshow-2__countdown-expired" data-countdown-expired hidden>{{ block.settings.expired_message | escape }}</p>
+  </div>
+{%- endcapture -%}
+
+{% render 'slideshow-2-content-block', block: block, content: block_content %}
+
+{% stylesheet %}
+  .slideshow-2__countdown-values {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .65rem;
+  }
+
+  .slideshow-2__countdown-unit {
+    display: grid;
+    gap: .25rem;
+    min-width: 4.25rem;
+    text-align: center;
+  }
+
+  .slideshow-2__countdown-unit strong {
+    font-size: var(--s2-countdown-size);
+    font-weight: 500;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .slideshow-2__countdown-unit span {
+    font-size: .65rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    opacity: .72;
+  }
+
+  .slideshow-2__countdown--cards .slideshow-2__countdown-unit {
+    padding: .85rem .65rem;
+    border: 1px solid currentColor;
+    border-radius: .75rem;
+    background: rgba(0, 0, 0, .12);
+    backdrop-filter: blur(10px);
+  }
+
+  .slideshow-2__countdown-expired { margin: 0; }
+
+  @media screen and (max-width: 767px) {
+    .slideshow-2__countdown-values { gap: .4rem; }
+    .slideshow-2__countdown-unit { min-width: 0; }
+    .slideshow-2__countdown-unit strong { font-size: var(--s2-countdown-size-mobile); }
+    .slideshow-2__countdown--cards .slideshow-2__countdown-unit { padding: .65rem .35rem; }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:sections.slideshow_2.blocks.countdown.name",
+  "settings": [
+    { "type": "text", "id": "end_date", "label": "t:sections.slideshow_2.block_settings.end_date", "info": "t:sections.slideshow_2.block_settings.end_date_info", "default": "2027-12-31" },
+    { "type": "text", "id": "end_time", "label": "t:sections.slideshow_2.block_settings.end_time", "info": "t:sections.slideshow_2.block_settings.end_time_info", "default": "23:59" },
+    { "type": "select", "id": "timezone", "label": "t:sections.slideshow_2.block_settings.timezone", "options": [{ "value": "-08:00", "label": "UTC-08:00" }, { "value": "-05:00", "label": "UTC-05:00" }, { "value": "Z", "label": "UTC" }, { "value": "+01:00", "label": "UTC+01:00" }, { "value": "+05:30", "label": "UTC+05:30" }, { "value": "+08:00", "label": "UTC+08:00" }, { "value": "+09:00", "label": "UTC+09:00" }, { "value": "+10:00", "label": "UTC+10:00" }], "default": "+08:00" },
+    { "type": "select", "id": "style", "label": "t:sections.slideshow_2.block_settings.countdown_style", "options": [{ "value": "minimal", "label": "t:sections.slideshow_2.options.minimal" }, { "value": "cards", "label": "t:sections.slideshow_2.options.cards" }], "default": "minimal" },
+    { "type": "checkbox", "id": "show_labels", "label": "t:sections.slideshow_2.block_settings.show_labels", "default": true },
+    { "type": "range", "id": "number_size", "min": 24, "max": 72, "step": 2, "unit": "px", "label": "t:sections.slideshow_2.block_settings.number_size", "default": 42 },
+    { "type": "range", "id": "number_size_mobile", "min": 20, "max": 48, "step": 2, "unit": "px", "label": "t:sections.slideshow_2.block_settings.number_size_mobile", "default": 30 },
+    { "type": "select", "id": "expired_behavior", "label": "t:sections.slideshow_2.block_settings.expired_behavior", "options": [{ "value": "hide", "label": "t:sections.slideshow_2.options.hide" }, { "value": "message", "label": "t:sections.slideshow_2.options.show_message" }], "default": "message" },
+    { "type": "text", "id": "expired_message", "label": "t:sections.slideshow_2.block_settings.expired_message", "default": "The event has started.", "visible_if": "{{ block.settings.expired_behavior == 'message' }}" },
+    { "type": "color", "id": "color", "label": "t:sections.slideshow_2.block_settings.color" },
+    { "type": "color", "id": "color_mobile", "label": "t:sections.slideshow_2.block_settings.color_mobile" },
+    { "type": "header", "content": "t:sections.slideshow_2.block_settings.header_position" },
+    { "type": "select", "id": "visibility", "label": "t:sections.slideshow_2.block_settings.visibility", "options": [{ "value": "all", "label": "t:sections.slideshow_2.options.all_devices" }, { "value": "desktop", "label": "t:sections.slideshow_2.options.desktop_only" }, { "value": "mobile", "label": "t:sections.slideshow_2.options.mobile_only" }], "default": "all" },
+    { "type": "select", "id": "position_mode", "label": "t:sections.slideshow_2.block_settings.position_mode", "options": [{ "value": "flow", "label": "t:sections.slideshow_2.options.follow_stack" }, { "value": "free", "label": "t:sections.slideshow_2.options.free_position" }], "default": "flow" },
+    { "type": "range", "id": "width", "min": 20, "max": 100, "step": 5, "unit": "%", "label": "t:sections.slideshow_2.block_settings.width", "default": 100 },
+    { "type": "range", "id": "width_mobile", "min": 20, "max": 100, "step": 5, "unit": "%", "label": "t:sections.slideshow_2.block_settings.width_mobile", "default": 100 },
+    { "type": "select", "id": "alignment", "label": "t:sections.slideshow_2.block_settings.alignment", "options": [{ "value": "flex-start", "label": "t:sections.slideshow_2.options.left" }, { "value": "center", "label": "t:sections.slideshow_2.options.center" }, { "value": "flex-end", "label": "t:sections.slideshow_2.options.right" }], "default": "flex-start" },
+    { "type": "select", "id": "alignment_mobile", "label": "t:sections.slideshow_2.block_settings.alignment_mobile", "options": [{ "value": "flex-start", "label": "t:sections.slideshow_2.options.left" }, { "value": "center", "label": "t:sections.slideshow_2.options.center" }, { "value": "flex-end", "label": "t:sections.slideshow_2.options.right" }], "default": "flex-start" },
+    { "type": "range", "id": "spacing_top", "min": 0, "max": 80, "step": 4, "unit": "px", "label": "t:sections.slideshow_2.block_settings.spacing_top", "default": 24 },
+    { "type": "range", "id": "spacing_top_mobile", "min": 0, "max": 60, "step": 2, "unit": "px", "label": "t:sections.slideshow_2.block_settings.spacing_top_mobile", "default": 16 },
+    { "type": "range", "id": "position_x", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_x", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "position_y", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_y", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "position_x_mobile", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_x_mobile", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "position_y_mobile", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_y_mobile", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "z_index", "min": 1, "max": 10, "step": 1, "label": "t:sections.slideshow_2.block_settings.z_index", "default": 2, "visible_if": "{{ block.settings.position_mode == 'free' }}" }
+  ],
+  "presets": [{ "name": "t:sections.slideshow_2.blocks.countdown.name" }]
+}
+{% endschema %}

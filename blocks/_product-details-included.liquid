@@ -1,0 +1,112 @@
+{% doc %}
+  Renders the Concept-inspired Included in the box sidebar.
+{% enddoc %}
+
+<aside
+  class="ekko-product-details__included"
+  style="
+    --ekko-pd-included-background: {{ block.settings.background | default: section.settings.surface_color }};
+    --ekko-pd-included-columns: {{ block.settings.columns }};
+    --ekko-pd-included-columns-mobile: {{ block.settings.columns_mobile }};
+    --ekko-pd-included-item-size: {{ block.settings.item_size }}px;
+    --ekko-pd-included-image-scale: {{ block.settings.image_scale }}%;
+  "
+  {{ block.shopify_attributes }}
+>
+  <div class="ekko-product-details__box-tab" aria-hidden="true">
+    <span></span>
+  </div>
+  {%- if block.settings.heading != blank -%}
+    <h3 class="ekko-product-details__included-heading">{{ block.settings.heading | escape }}</h3>
+  {%- endif -%}
+  <div class="ekko-product-details__included-items">
+    {% content_for 'blocks' %}
+  </div>
+</aside>
+
+{% stylesheet %}
+  .ekko-product-details__included {
+    position: relative;
+    display: grid;
+    gap: clamp(1.5rem, 3vw, 2.5rem);
+    padding: clamp(2rem, 4vw, 3.5rem) clamp(1.5rem, 3vw, 3rem);
+    text-align: center;
+    background: var(--ekko-pd-included-background);
+    border-radius: clamp(1rem, 2vw, 2rem);
+  }
+
+  .ekko-product-details__box-tab {
+    position: absolute;
+    bottom: calc(100% - 1px);
+    left: 50%;
+    width: min(58%, 14rem);
+    height: 2.4rem;
+    transform: translateX(-50%);
+    background: var(--ekko-pd-included-background);
+    border-radius: 1.25rem 1.25rem 0 0;
+  }
+
+  .ekko-product-details__box-tab span {
+    position: absolute;
+    left: 50%;
+    bottom: .45rem;
+    width: 48%;
+    height: .5rem;
+    transform: translateX(-50%);
+    background: var(--ekko-product-details-background);
+    border-radius: 999px;
+  }
+
+  .ekko-product-details__included-heading {
+    margin: 0;
+    font-size: clamp(1.5rem, 2.5vw, 2.4rem);
+    line-height: 1;
+    letter-spacing: -.035em;
+    text-wrap: balance;
+  }
+
+  .ekko-product-details__included-items {
+    display: grid;
+    grid-template-columns: repeat(var(--ekko-pd-included-columns), minmax(0, 1fr));
+    gap: 1.5rem 1rem;
+    align-items: start;
+  }
+
+  .ekko-product-details__included-items > .shopify-block {
+    display: block;
+    min-width: 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-product-details__included-items {
+      grid-template-columns: repeat(var(--ekko-pd-included-columns-mobile), minmax(0, 1fr));
+      gap: 1.25rem .75rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Included in the box",
+  "blocks": [{ "type": "_product-details-included-item" }],
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Included in the Box" },
+    { "type": "header", "content": "Items" },
+    { "type": "range", "id": "columns", "label": "Items per row on desktop", "min": 1, "max": 5, "step": 1, "default": 2 },
+    { "type": "range", "id": "columns_mobile", "label": "Items per row on mobile", "min": 1, "max": 3, "step": 1, "default": 2 },
+    { "type": "range", "id": "item_size", "label": "Item size", "min": 56, "max": 176, "step": 4, "unit": "px", "default": 112 },
+    { "type": "range", "id": "image_scale", "label": "Image size inside item", "min": 40, "max": 100, "step": 5, "unit": "%", "default": 75 },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "background", "label": "Background" }
+  ],
+  "presets": [
+    {
+      "name": "Included in the box",
+      "blocks": [
+        { "type": "_product-details-included-item", "settings": { "heading": "Main product" } },
+        { "type": "_product-details-included-item", "settings": { "heading": "Accessory" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,40 @@
+{% doc %}
+  Collapsible product row with icon, rich text, page content, or custom Liquid.
+{% enddoc %}
+
+{%- liquid
+  assign row_heading = block.settings.heading | default: block.settings.page.title
+-%}
+
+{%- if row_heading != blank -%}
+  <details class="ekko-product-block product__accordion details {{ block.settings.style }}" is="accordion-details"{% if block.settings.opened %} open{% endif %}>
+    <summary class="details__summary flex items-center justify-between gap-2 cursor-pointer">
+      <div class="flex items-center gap-2d5">
+        {%- if block.settings.icon != 'none' -%}{%- render 'icon-accordion', icon: block.settings.icon -%}{%- endif -%}
+        <span class="text-sm-base font-medium leading-none">{{ row_heading | escape }}</span>
+      </div>
+      {%- render 'icon', icon: 'plus-2', size: 'xs', class: 'shrink-0' -%}
+    </summary>
+    <div class="details__content rte text-sm text-opacity">
+      {{- block.settings.content -}}
+      {%- if block.settings.page != blank -%}{{- block.settings.page.content -}}{%- endif -%}
+      {{- block.settings.liquid -}}
+    </div>
+  </details>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Collapsible row",
+  "settings": [
+    { "type": "select", "id": "style", "label": "Style", "options": [{ "value": "with-border", "label": "Divider" }, { "value": "with-background", "label": "Soft background" }], "default": "with-border" },
+    { "type": "select", "id": "icon", "label": "Icon", "options": [{ "value": "none", "label": "None" }, { "value": "award", "label": "Award" }, { "value": "bag", "label": "Bag" }, { "value": "box", "label": "Box" }, { "value": "calendar", "label": "Calendar" }, { "value": "check_mark", "label": "Check mark" }, { "value": "file_text", "label": "File" }, { "value": "gift", "label": "Gift" }, { "value": "return", "label": "Return" }, { "value": "ruler", "label": "Ruler" }, { "value": "shield", "label": "Shield" }, { "value": "truck", "label": "Truck" }, { "value": "wash", "label": "Care" }], "default": "none" },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Product information" },
+    { "type": "richtext", "id": "content", "label": "Content", "default": "<p>Add details about materials, sizing, shipping, or care.</p>" },
+    { "type": "page", "id": "page", "label": "Page" },
+    { "type": "liquid", "id": "liquid", "label": "Custom Liquid" },
+    { "type": "checkbox", "id": "opened", "label": "Open by default", "default": false }
+  ],
+  "presets": [{ "name": "Collapsible row" }]
+}
+{% endschema %}

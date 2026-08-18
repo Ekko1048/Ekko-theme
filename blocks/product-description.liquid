@@ -1,0 +1,30 @@
+{% doc %}
+  Product description with independent typography controls.
+{% enddoc %}
+
+{%- assign product_item = product | default: section.settings.product -%}
+
+<div
+  class="ekko-product-block ekko-product-description rte"
+  style="--product-block-color: {{ block.settings.color }}; --product-description-size: {{ block.settings.font_size }}px; --product-description-size-mobile: {{ block.settings.font_size_mobile }}px; --product-description-width: {{ block.settings.max_width }}ch; --product-description-opacity: {{ block.settings.opacity | divided_by: 100.0 }};"
+>
+  {%- if product_item.description != blank -%}
+    {{ product_item.description }}
+  {%- else -%}
+    {{ 'onboarding.product_description' | t }}
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Product description",
+  "settings": [
+    { "type": "range", "id": "font_size", "label": "Desktop font size", "min": 13, "max": 24, "step": 1, "unit": "px", "default": 16 },
+    { "type": "range", "id": "font_size_mobile", "label": "Mobile font size", "min": 13, "max": 22, "step": 1, "unit": "px", "default": 15 },
+    { "type": "range", "id": "max_width", "label": "Maximum text width", "min": 30, "max": 80, "step": 2, "unit": "ch", "default": 58 },
+    { "type": "range", "id": "opacity", "label": "Text opacity", "min": 50, "max": 100, "step": 5, "unit": "%", "default": 80 },
+    { "type": "color", "id": "color", "label": "Text color", "default": "#1C1C1C" }
+  ],
+  "presets": [{ "name": "Product description" }]
+}
+{% endschema %}

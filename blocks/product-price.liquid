@@ -1,0 +1,47 @@
+{% doc %}
+  Product price and optional tax/payment terms.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign placeholder = false
+  if product_item == blank
+    assign placeholder = true
+  endif
+-%}
+
+<div class="ekko-product-block product__price grid gap-3" style="--product-block-color: {{ block.settings.color }};">
+  <div id="Price-{{ section.id }}-{{ product_id }}">
+    {%- render 'product-price', product: product_item, placeholder: placeholder, use_variant: true, class: 'flex flex-wrap items-baseline gap-2' -%}
+  </div>
+
+  {%- if block.settings.show_taxes_notice and product_item != blank -%}
+    {%- if cart.taxes_included or shop.shipping_policy.body != blank -%}
+    <div class="product__tax rte text-sm">
+      {%- if cart.taxes_included -%}{{ 'products.product.include_taxes' | t }}{%- endif -%}
+      {%- if shop.shipping_policy.body != blank -%}{{ 'products.product.shipping_policy_html' | t: link: shop.shipping_policy.url }}{%- endif -%}
+    </div>
+    {%- endif -%}
+  {%- endif -%}
+
+  {%- if block.settings.show_payment_terms and product_item != blank -%}
+    {%- assign installment_form_id = 'ProductInstallment-' | append: section.id | append: '-' | append: product_id -%}
+    {%- form 'product', product_item, id: installment_form_id, class: 'installment caption-large' -%}
+      <input type="hidden" name="id" value="{{ product_item.selected_or_first_available_variant.id }}">
+      {{ form | payment_terms }}
+    {%- endform -%}
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Product price",
+  "settings": [
+    { "type": "checkbox", "id": "show_taxes_notice", "label": "Show tax and shipping notice", "default": true },
+    { "type": "checkbox", "id": "show_payment_terms", "label": "Show payment terms", "default": true },
+    { "type": "color", "id": "color", "label": "Text color", "default": "#1C1C1C" }
+  ],
+  "presets": [{ "name": "Product price" }]
+}
+{% endschema %}

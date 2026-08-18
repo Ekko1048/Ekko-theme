@@ -1,0 +1,47 @@
+{% doc %}
+  Renders a compact text link in Rich text.
+{% enddoc %}
+
+{% style %}
+  #shopify-block-{{ block.id }} .ekko-richtext-link {
+    {% if block.settings.color != blank %}color: {{ block.settings.color }};{% endif %}
+  }
+{% endstyle %}
+
+{%- if block.settings.label != blank -%}
+  <a
+    class="ekko-richtext-link link inline-flex"
+    {% if block.settings.link != blank %}
+      href="{{ block.settings.link }}"
+      {% if block.settings.external %}target="_blank" rel="noopener noreferrer"{% endif %}
+    {% else %}
+      role="link"
+      aria-disabled="true"
+    {% endif %}
+  >
+    <span>{{ block.settings.label | escape }}</span>
+    {%- if block.settings.show_icon -%}{% render 'icon', icon: 'arrow-right', size: 'sm' %}{%- endif -%}
+  </a>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-richtext-link {
+    align-items: center;
+    gap: .5rem;
+    color: inherit;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rich text link",
+  "settings": [
+    { "type": "text", "id": "label", "label": "t:sections.rich-text.blocks.link.label", "default": "Learn more" },
+    { "type": "url", "id": "link", "label": "t:sections.global.settings.link.label" },
+    { "type": "checkbox", "id": "external", "label": "t:sections.global.settings.button_external.label", "default": false },
+    { "type": "checkbox", "id": "show_icon", "label": "t:sections.global.settings.button_icon.label", "default": true },
+    { "type": "color", "id": "color", "label": "t:sections.rich-text.blocks.link.color" }
+  ],
+  "presets": [{ "name": "Rich text link" }]
+}
+{% endschema %}

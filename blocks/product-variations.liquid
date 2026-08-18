@@ -1,0 +1,38 @@
+{% doc %}
+  Links sibling products and presents them as a variation picker.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+-%}
+
+{%- if product_item != blank -%}
+  <div class="ekko-product-block">
+    {%- render 'product-variants',
+      block: block,
+      product: product_item,
+      product_id: product_id,
+      section_id: section.id,
+      image_ratio: section.settings.image_ratio,
+      image_ratio_mobile: section.settings.image_ratio_mobile,
+      image_fill: settings.product_image_fill
+    -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product variations",
+  "settings": [
+    { "type": "paragraph", "content": "Connect separate products and display them like product options. Include the current product in the list." },
+    { "type": "text", "id": "option_name", "label": "Option name", "default": "Color" },
+    { "type": "text", "id": "option_value_metafield", "label": "Option value metafield", "info": "Enter namespace.key, for example custom.color_name." },
+    { "type": "product_list", "id": "products", "label": "Products" },
+    { "type": "checkbox", "id": "enable_color_swatches", "label": "Enable color swatches", "default": true },
+    { "type": "select", "id": "color_swatch_type", "label": "Swatch type", "options": [{ "value": "color", "label": "Color" }, { "value": "variant", "label": "Product image" }], "default": "color", "visible_if": "{{ block.settings.enable_color_swatches }}" },
+    { "type": "page", "id": "size_chart", "label": "Size chart" }
+  ],
+  "presets": [{ "name": "Product variations" }]
+}
+{% endschema %}

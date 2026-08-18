@@ -1,0 +1,215 @@
+{% doc %}
+  Renders a Concept-inspired information card inside the Product Share help drawer.
+{% enddoc %}
+
+{%- liquid
+  assign has_highlight_gradient = false
+  if block.settings.gradient_highlight != blank
+    if block.settings.gradient_highlight != 'rgba(0,0,0,0)'
+      assign has_highlight_gradient = true
+    endif
+  endif
+-%}
+
+<article
+  class="help-list__item ekko-help-content grid gap-2 md:gap-3 relative z-1"
+  data-product-help-entry
+  style="{% render 'section-variables', section: block %}"
+>
+  <div class="ekko-help-content__heading flex items-center gap-3">
+    {%- if block.settings.custom_icon != blank -%}
+      {{ block.settings.custom_icon | image_url: width: 160 | image_tag:
+        loading: 'lazy',
+        widths: '40,64,96,128,160',
+        sizes: '32px',
+        class: 'ekko-help-content__custom-icon'
+      }}
+    {%- elsif block.settings.icon != 'none' -%}
+      {%- render 'icon-guarantee', icon: block.settings.icon -%}
+    {%- endif -%}
+
+    {%- if block.settings.heading != blank -%}
+      <p class="h4 font-medium leading-tight md:text-lg">
+        {%- render 'highlighted-text',
+          content: block.settings.heading,
+          style: block.settings.highlighted_text,
+          scribble: block.settings.highlighted_scribble,
+          gradient: has_highlight_gradient
+        -%}
+      </p>
+    {%- endif -%}
+  </div>
+
+  {%- if block.settings.text != blank -%}
+    <div class="rte text-sm">{{ block.settings.text }}</div>
+  {%- endif -%}
+</article>
+
+{% stylesheet %}
+  .ekko-product-help-content-entry {
+    display: block;
+    min-width: 0;
+  }
+
+  .ekko-help-content {
+    isolation: isolate;
+    overflow: hidden;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+  }
+
+  .ekko-help-content:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 1rem 2.5rem rgb(0 0 0 / .08);
+  }
+
+  .ekko-help-content__heading:empty {
+    display: none;
+  }
+
+  .ekko-help-content__custom-icon,
+  .ekko-help-content__heading > .icon {
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 2rem;
+    object-fit: contain;
+  }
+
+  .ekko-help-content > .rte {
+    margin-inline-start: 2.75rem;
+  }
+
+  .ekko-help-content .highlighted-text {
+    z-index: 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-help-content > .rte {
+      margin-inline-start: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ekko-help-content {
+      transition: none;
+    }
+
+    .ekko-help-content:hover {
+      transform: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Help drawer content",
+  "tag": "li",
+  "class": "ekko-product-help-entry ekko-product-help-content-entry",
+  "settings": [
+    {
+      "type": "select",
+      "id": "icon",
+      "label": "Icon",
+      "default": "rocket",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "alert", "label": "Alert" },
+        { "value": "award", "label": "Award" },
+        { "value": "bag", "label": "Bag" },
+        { "value": "box", "label": "Box" },
+        { "value": "briefcase", "label": "Briefcase" },
+        { "value": "calendar", "label": "Calendar" },
+        { "value": "chat_bubble", "label": "Chat" },
+        { "value": "check_mark", "label": "Check mark" },
+        { "value": "clipboard", "label": "Clipboard" },
+        { "value": "cosmetics", "label": "Cosmetics" },
+        { "value": "creadit_card", "label": "Credit card" },
+        { "value": "devices", "label": "Devices" },
+        { "value": "email", "label": "Email" },
+        { "value": "eye", "label": "Eye" },
+        { "value": "file_text", "label": "File" },
+        { "value": "gift", "label": "Gift" },
+        { "value": "headphone", "label": "Headphones" },
+        { "value": "heart", "label": "Heart" },
+        { "value": "lightning", "label": "Lightning" },
+        { "value": "lock", "label": "Lock" },
+        { "value": "map_pin", "label": "Map pin" },
+        { "value": "newspaper", "label": "Newspaper" },
+        { "value": "organic", "label": "Organic" },
+        { "value": "perfume", "label": "Perfume" },
+        { "value": "phone", "label": "Phone" },
+        { "value": "plane", "label": "Plane" },
+        { "value": "planet", "label": "Planet" },
+        { "value": "recycling", "label": "Recycling" },
+        { "value": "return", "label": "Return" },
+        { "value": "rocket", "label": "Rocket" },
+        { "value": "ruler", "label": "Ruler" },
+        { "value": "sale", "label": "Sale" },
+        { "value": "shield", "label": "Shield" },
+        { "value": "shirt", "label": "Shirt" },
+        { "value": "shoe", "label": "Shoe" },
+        { "value": "star", "label": "Star" },
+        { "value": "support", "label": "Support" },
+        { "value": "swatchbook", "label": "Swatchbook" },
+        { "value": "tag", "label": "Tag" },
+        { "value": "time", "label": "Time" },
+        { "value": "trophy", "label": "Trophy" },
+        { "value": "truck", "label": "Truck" },
+        { "value": "users", "label": "Users" },
+        { "value": "wallet", "label": "Wallet" },
+        { "value": "wash", "label": "Wash" },
+        { "value": "watch", "label": "Watch" },
+        { "value": "wrench", "label": "Wrench" }
+      ]
+    },
+    { "type": "image_picker", "id": "custom_icon", "label": "Custom icon", "info": "Overrides the selected icon." },
+    { "type": "inline_richtext", "id": "heading", "label": "Heading", "default": "Shipping <em>information</em>" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Use this content to answer customer questions in detail.</p>" },
+    { "type": "header", "content": "Heading highlight", "info": "Italicized words in the heading receive the selected highlight style." },
+    {
+      "type": "select",
+      "id": "highlighted_text",
+      "label": "Style",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "text", "label": "Colored text" },
+        { "value": "full_text", "label": "Full highlight" },
+        { "value": "half_text", "label": "Half highlight" },
+        { "value": "underline", "label": "Underline" },
+        { "value": "stencil", "label": "Stencil" },
+        { "value": "scribble", "label": "Scribble" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "select",
+      "id": "highlighted_scribble",
+      "label": "Scribble style",
+      "visible_if": "{{ block.settings.highlighted_text == 'scribble' }}",
+      "options": [
+        { "value": "circle", "label": "Circle" },
+        { "value": "basic-underline", "label": "Basic underline" },
+        { "value": "sketch-underline", "label": "Sketch underline" },
+        { "value": "squiggle-underline", "label": "Squiggle underline" },
+        { "value": "squiggle-underline-2", "label": "Double squiggle" }
+      ],
+      "default": "circle"
+    },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "color_text", "label": "Text", "default": "#7C4A03" },
+    { "type": "color", "id": "color_background", "label": "Background", "default": "#FFF8E8" },
+    { "type": "color_background", "id": "gradient_background", "label": "Background gradient" },
+    { "type": "color", "id": "color_highlight", "label": "Highlight", "default": "#FFD99A" },
+    { "type": "color_background", "id": "gradient_highlight", "label": "Highlight gradient" }
+  ],
+  "presets": [
+    {
+      "name": "Help drawer content",
+      "settings": {
+        "icon": "rocket",
+        "heading": "Shipping <em>information</em>",
+        "highlighted_text": "half_text"
+      }
+    }
+  ]
+}
+{% endschema %}

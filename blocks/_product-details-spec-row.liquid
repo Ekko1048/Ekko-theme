@@ -1,0 +1,97 @@
+{% doc %}
+  Renders one label/value row inside a Product details collapsible block.
+{% enddoc %}
+
+{%- liquid
+  assign row_value = block.settings.value
+  assign metafield_namespace = block.settings.metafield_namespace | strip
+  assign metafield_key = block.settings.metafield_key | strip
+  assign metafield = blank
+  if metafield_namespace != blank and metafield_key != blank
+    assign metafield = product.metafields[metafield_namespace][metafield_key]
+  endif
+-%}
+
+{%- if block.settings.label != blank -%}
+  {%- if row_value != blank or metafield.value != blank -%}
+  <dl class="ekko-product-spec-row" {{ block.shopify_attributes }}>
+    <dt class="ekko-product-spec-row__label">{{ block.settings.label | escape }}</dt>
+    <dd class="ekko-product-spec-row__value">
+      {%- if metafield.value != blank -%}
+        {%- if metafield.list? -%}
+          {%- for item in metafield.value -%}
+            {{ item }}{% unless forloop.last %}<br>{% endunless %}
+          {%- endfor -%}
+        {%- else -%}
+          {{ metafield | metafield_tag }}
+        {%- endif -%}
+      {%- else -%}
+        {{- row_value -}}
+      {%- endif -%}
+      {%- if block.settings.suffix != blank %} {{ block.settings.suffix | escape }}{% endif -%}
+    </dd>
+  </dl>
+  {%- endif -%}
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-product-spec-row {
+    display: grid;
+    grid-template-columns: minmax(7.5rem, 38%) minmax(0, 1fr);
+    align-items: baseline;
+    gap: clamp(.75rem, 2vw, 1.5rem);
+    margin: 0;
+    padding: .85rem .875rem;
+    font-size: clamp(.9rem, 1vw, 1rem);
+    line-height: 1.4;
+  }
+
+  .ekko-product-spec-row__label {
+    min-width: 0;
+    opacity: .62;
+    font-size: .875em;
+    font-weight: 650;
+    letter-spacing: .01em;
+    overflow-wrap: anywhere;
+  }
+
+  .ekko-product-spec-row__value {
+    min-width: 0;
+    margin: 0;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .ekko-product-spec-row__value > :first-child { margin-block-start: 0; }
+  .ekko-product-spec-row__value > :last-child { margin-block-end: 0; }
+
+  @media screen and (max-width: 749px) {
+    .ekko-product-spec-row {
+      grid-template-columns: minmax(0, var(--ekko-pd-label-width, 40%)) minmax(0, 1fr);
+      column-gap: .625rem;
+      padding-inline: .25rem;
+    }
+  }
+
+  @media screen and (max-width: 359px) {
+    .ekko-product-spec-row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: .25rem;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Specification row",
+  "settings": [
+    { "type": "text", "id": "label", "label": "Label", "default": "Material" },
+    { "type": "inline_richtext", "id": "value", "label": "Value", "default": "Aircraft-grade aluminum" },
+    { "type": "text", "id": "suffix", "label": "Unit or suffix" },
+    { "type": "header", "content": "Optional product metafield" },
+    { "type": "text", "id": "metafield_namespace", "label": "Namespace", "info": "Example: custom" },
+    { "type": "text", "id": "metafield_key", "label": "Key", "info": "When this metafield has a value, it replaces the manual value." }
+  ],
+  "presets": [{ "name": "Specification row" }]
+}
+{% endschema %}

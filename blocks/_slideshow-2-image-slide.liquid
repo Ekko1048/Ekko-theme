@@ -1,0 +1,257 @@
+{% doc %}
+  Renders an image slide that accepts Slideshow 2 content blocks.
+{% enddoc %}
+
+{%- liquid
+  assign content_width_class = 'page-width'
+  if section.settings.content_width == 'full'
+    assign content_width_class = 'page-width page-width--full'
+  endif
+
+  assign loading = 'lazy'
+  if section.index == 1
+    assign loading = 'eager'
+  endif
+
+  assign base_image = block.settings.image | default: block.settings.image_mobile
+  assign image_focal_point = base_image.presentation.focal_point | default: '50% 50%'
+  assign image_focal_point_mobile = block.settings.image_mobile.presentation.focal_point | default: image_focal_point
+
+  assign position_parts = block.settings.content_position | split: '-'
+  assign content_vertical = position_parts | first
+  assign content_horizontal = position_parts | last
+  if content_horizontal == 'left'
+    assign content_horizontal = 'start'
+  elsif content_horizontal == 'right'
+    assign content_horizontal = 'end'
+  endif
+  if content_vertical == 'top'
+    assign content_vertical = 'start'
+  elsif content_vertical == 'bottom'
+    assign content_vertical = 'end'
+  endif
+
+  assign position_mobile_parts = block.settings.content_position_mobile | split: '-'
+  assign content_vertical_mobile = position_mobile_parts | first
+  assign content_horizontal_mobile = position_mobile_parts | last
+  if content_horizontal_mobile == 'left'
+    assign content_horizontal_mobile = 'start'
+  elsif content_horizontal_mobile == 'right'
+    assign content_horizontal_mobile = 'end'
+  endif
+  if content_vertical_mobile == 'top'
+    assign content_vertical_mobile = 'start'
+  elsif content_vertical_mobile == 'bottom'
+    assign content_vertical_mobile = 'end'
+  endif
+-%}
+
+<article
+  class="slideshow-2__slide slideshow-2__slide--image"
+  data-slide
+  data-slide-type="image"
+  aria-roledescription="slide"
+  aria-hidden="true"
+  style="
+    --s2-media-position: {{ image_focal_point }};
+    --s2-media-position-mobile: {{ image_focal_point_mobile }};
+    --s2-overlay-color: {{ block.settings.overlay_color }};
+    --s2-overlay-opacity: {{ block.settings.overlay_opacity | divided_by: 100.0 }};
+    --s2-content-x: {{ content_horizontal }};
+    --s2-content-y: {{ content_vertical }};
+    --s2-content-x-mobile: {{ content_horizontal_mobile }};
+    --s2-content-y-mobile: {{ content_vertical_mobile }};
+    --s2-stack-width: {{ block.settings.content_max_width }}px;
+    --s2-stack-width-mobile: {{ block.settings.content_max_width_mobile }}px;
+    --s2-slide-background: {{ block.settings.background_gradient | default: block.settings.background }};
+    --s2-slide-background-mobile: {{ block.settings.mobile_background }};
+    --s2-slide-controls-color: {{ block.settings.controls_color }};
+    --s2-slide-controls-background: {{ block.settings.controls_background }};
+  "
+  {{ block.shopify_attributes }}
+>
+  <div class="slideshow-2__media">
+    {%- if base_image != blank -%}
+      <picture>
+        {%- if block.settings.image_mobile != blank -%}
+          <source
+            media="(max-width: 767px)"
+            srcset="
+              {{ block.settings.image_mobile | image_url: width: 480 }} 480w,
+              {{ block.settings.image_mobile | image_url: width: 750 }} 750w,
+              {{ block.settings.image_mobile | image_url: width: 1100 }} 1100w
+            "
+            width="{{ block.settings.image_mobile.width }}"
+            height="{{ block.settings.image_mobile.height }}"
+          >
+        {%- endif -%}
+        {{ base_image | image_url: width: 2400 | image_tag:
+          loading: loading,
+          widths: '480, 750, 1100, 1500, 1800, 2100, 2400',
+          sizes: '100vw',
+          class: 'slideshow-2__image'
+        }}
+      </picture>
+    {%- else -%}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'slideshow-2__placeholder' }}
+    {%- endif -%}
+  </div>
+
+  <span class="slideshow-2__overlay"></span>
+
+  <div class="slideshow-2__content">
+    <div class="slideshow-2__content-width {{ content_width_class }}">
+      <div class="slideshow-2__content-stack">
+        {% content_for 'blocks' %}
+      </div>
+    </div>
+  </div>
+</article>
+
+{% schema %}
+{
+  "name": "t:sections.slideshow_2.blocks.image_slide.name",
+  "blocks": [
+    { "type": "_slideshow-2-subheading" },
+    { "type": "_slideshow-2-heading" },
+    { "type": "_slideshow-2-text" },
+    { "type": "_slideshow-2-button" },
+    { "type": "_slideshow-2-image" },
+    { "type": "_slideshow-2-countdown" }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.slideshow_2.blocks.image_slide.media"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "t:sections.slideshow_2.blocks.image_slide.image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_mobile",
+      "label": "t:sections.slideshow_2.blocks.image_slide.image_mobile"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.slideshow_2.settings.header_appearance"
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "t:sections.slideshow_2.settings.slide_background",
+      "default": "#1d1d1f"
+    },
+    {
+      "type": "color_background",
+      "id": "background_gradient",
+      "label": "t:sections.slideshow_2.settings.background_gradient"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "t:sections.slideshow_2.settings.overlay_color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "t:sections.slideshow_2.settings.overlay_opacity",
+      "default": 25
+    },
+    {
+      "type": "color",
+      "id": "mobile_background",
+      "label": "t:sections.slideshow_2.settings.mobile_background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "controls_color",
+      "label": "t:sections.slideshow_2.settings.controls_color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "controls_background",
+      "label": "t:sections.slideshow_2.settings.controls_background",
+      "default": "#111111"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.slideshow_2.settings.header_content_position"
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "t:sections.slideshow_2.settings.content_position",
+      "options": [
+        { "value": "top-left", "label": "t:sections.slideshow_2.options.top_left" },
+        { "value": "top-center", "label": "t:sections.slideshow_2.options.top_center" },
+        { "value": "top-right", "label": "t:sections.slideshow_2.options.top_right" },
+        { "value": "center-left", "label": "t:sections.slideshow_2.options.center_left" },
+        { "value": "center-center", "label": "t:sections.slideshow_2.options.center" },
+        { "value": "center-right", "label": "t:sections.slideshow_2.options.center_right" },
+        { "value": "bottom-left", "label": "t:sections.slideshow_2.options.bottom_left" },
+        { "value": "bottom-center", "label": "t:sections.slideshow_2.options.bottom_center" },
+        { "value": "bottom-right", "label": "t:sections.slideshow_2.options.bottom_right" }
+      ],
+      "default": "center-left"
+    },
+    {
+      "type": "select",
+      "id": "content_position_mobile",
+      "label": "t:sections.slideshow_2.settings.content_position_mobile",
+      "options": [
+        { "value": "top-left", "label": "t:sections.slideshow_2.options.top_left" },
+        { "value": "top-center", "label": "t:sections.slideshow_2.options.top_center" },
+        { "value": "top-right", "label": "t:sections.slideshow_2.options.top_right" },
+        { "value": "center-left", "label": "t:sections.slideshow_2.options.center_left" },
+        { "value": "center-center", "label": "t:sections.slideshow_2.options.center" },
+        { "value": "center-right", "label": "t:sections.slideshow_2.options.center_right" },
+        { "value": "bottom-left", "label": "t:sections.slideshow_2.options.bottom_left" },
+        { "value": "bottom-center", "label": "t:sections.slideshow_2.options.bottom_center" },
+        { "value": "bottom-right", "label": "t:sections.slideshow_2.options.bottom_right" }
+      ],
+      "default": "bottom-left"
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "min": 320,
+      "max": 900,
+      "step": 20,
+      "unit": "px",
+      "label": "t:sections.slideshow_2.settings.content_max_width",
+      "default": 620
+    },
+    {
+      "type": "range",
+      "id": "content_max_width_mobile",
+      "min": 240,
+      "max": 600,
+      "step": 20,
+      "unit": "px",
+      "label": "t:sections.slideshow_2.settings.content_max_width_mobile",
+      "default": 360
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.slideshow_2.blocks.image_slide.name",
+      "blocks": [
+        { "type": "_slideshow-2-subheading" },
+        { "type": "_slideshow-2-heading" },
+        { "type": "_slideshow-2-text" },
+        { "type": "_slideshow-2-button" }
+      ]
+    }
+  ]
+}
+{% endschema %}

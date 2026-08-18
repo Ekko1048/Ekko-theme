@@ -1,0 +1,39 @@
+{% doc %}
+  Complementary product recommendations configured through Shopify Search & Discovery.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+-%}
+
+{%- if product_item != blank -%}
+  <div class="ekko-product-block">
+    {%- render 'product-complementary',
+      section_id: section.id,
+      product_id: product_id,
+      image_ratio: block.settings.image_ratio,
+      image_fill: block.settings.image_fill,
+      limit: block.settings.product_limit,
+      heading: block.settings.heading,
+      show_vendor: block.settings.show_vendor,
+      show_price: block.settings.show_price
+    -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Complementary products",
+  "settings": [
+    { "type": "paragraph", "content": "Choose complementary products in the Shopify Search & Discovery app." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Pairs well with" },
+    { "type": "range", "id": "product_limit", "label": "Maximum products", "min": 1, "max": 10, "step": 1, "default": 6 },
+    { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": true },
+    { "type": "checkbox", "id": "show_price", "label": "Show price", "default": true },
+    { "type": "select", "id": "image_ratio", "label": "Image ratio", "options": [{ "value": "square", "label": "Square" }, { "value": "portrait", "label": "Portrait" }, { "value": "landscape", "label": "Landscape" }], "default": "square" },
+    { "type": "checkbox", "id": "image_fill", "label": "Fill image frame", "default": false }
+  ],
+  "presets": [{ "name": "Complementary products" }]
+}
+{% endschema %}

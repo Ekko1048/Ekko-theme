@@ -1,0 +1,224 @@
+{% doc %}
+  Product title block shared by Featured product and product templates.
+  Optional price and rating rows only render when matching standalone blocks are absent.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_title = product_item.title
+  if product_title == blank
+    assign product_title = 'onboarding.product_title' | t
+  endif
+
+  assign heading_tag = block.settings.heading_tag
+  if heading_tag == 'auto'
+    assign heading_tag = 'h2'
+    if request.page_type == 'product'
+      assign heading_tag = 'h1'
+    endif
+  endif
+
+  assign desktop_title_size = 48
+  case block.settings.title_size
+    when 'small'
+      assign desktop_title_size = 36
+    when 'large'
+      assign desktop_title_size = 60
+    when 'extra_large'
+      assign desktop_title_size = 72
+    when 'custom'
+      assign desktop_title_size = block.settings.font_size
+  endcase
+
+  assign mobile_title_size = 34
+  case block.settings.title_size_mobile
+    when 'small'
+      assign mobile_title_size = 28
+    when 'large'
+      assign mobile_title_size = 40
+    when 'extra_large'
+      assign mobile_title_size = 48
+    when 'custom'
+      assign mobile_title_size = block.settings.font_size_mobile
+  endcase
+
+  assign price_block = section.blocks | where: 'type', 'product-price' | first
+  assign rating_block = section.blocks | where: 'type', 'product-rating' | first
+
+  assign show_embedded_price = false
+  if block.settings.show_price
+    if price_block == blank
+      assign show_embedded_price = true
+    endif
+  endif
+
+  assign show_embedded_rating = false
+  if block.settings.show_rating
+    if rating_block == blank
+      if product_item.metafields.reviews.rating.value != blank or block.settings.show_empty_rating or product_item == blank
+        assign show_embedded_rating = true
+      endif
+    endif
+  endif
+
+  assign show_vendor = false
+  if block.settings.show_vendor
+    if product_item.vendor != blank or product_item == blank
+      assign show_vendor = true
+    endif
+  endif
+
+  assign show_sku = false
+  if block.settings.show_sku
+    if product_item.selected_or_first_available_variant.sku != blank
+      assign show_sku = true
+    endif
+  endif
+-%}
+
+<div
+  class="ekko-product-block ekko-product-title ekko-product-title--{{ block.settings.font_family }}{% if block.settings.uppercase_title %} ekko-product-title--uppercase{% endif %}"
+  data-align="{{ block.settings.alignment }}"
+  data-mobile-align="{{ block.settings.alignment_mobile }}"
+  data-meta-layout="{{ block.settings.metadata_layout }}"
+  style="
+    --product-block-color: {{ block.settings.color }};
+    --product-title-meta-color: {{ block.settings.metadata_color }};
+    --product-title-size: {{ desktop_title_size }}px;
+    --product-title-size-mobile: {{ mobile_title_size }}px;
+    --product-title-weight: {{ block.settings.font_weight }};
+    --product-title-leading: {{ block.settings.line_height | divided_by: 100.0 }};
+    --product-title-tracking: {{ block.settings.letter_spacing | divided_by: 100.0 }}em;
+    --product-title-width: {% if block.settings.limit_width %}{{ block.settings.max_width }}ch{% else %}100%{% endif %};
+    --product-title-gap: {{ block.settings.content_gap }}px;
+    --product-title-meta-gap: {{ block.settings.metadata_gap }}px;
+    --product-title-meta-size: {{ block.settings.metadata_size }}px;
+  "
+>
+  {%- capture metadata -%}
+    {%- if show_vendor or show_sku -%}
+      <div class="ekko-product-title__metadata" aria-label="Product information">
+        {%- if show_vendor -%}
+          {%- if block.settings.link_vendor and product_item != blank -%}
+            <a class="ekko-product-title__vendor" href="{{ product_item.vendor | url_for_vendor }}">{{ product_item.vendor | escape }}</a>
+          {%- else -%}
+            <span class="ekko-product-title__vendor">{{ product_item.vendor | default: shop.name | escape }}</span>
+          {%- endif -%}
+        {%- endif -%}
+
+        {%- if show_vendor and show_sku and block.settings.metadata_layout == 'inline' -%}
+          <span class="ekko-product-title__metadata-separator" aria-hidden="true"></span>
+        {%- endif -%}
+
+        {%- if show_sku -%}
+          <span class="ekko-product-title__sku-wrap">
+            {%- if block.settings.sku_label != blank -%}<span>{{ block.settings.sku_label | escape }}</span>{%- endif -%}
+            <span id="Sku-{{ section.id }}-{{ product_id }}" class="ekko-product-title__sku">{{ product_item.selected_or_first_available_variant.sku | escape }}</span>
+          </span>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endcapture -%}
+
+  {%- if block.settings.metadata_position == 'above' -%}{{ metadata }}{%- endif -%}
+
+  <{{ heading_tag }} class="ekko-product-title__heading ekko-product-title__heading--{{ block.settings.text_wrap }}{% if block.settings.break_long_words %} ekko-product-title__heading--break{% endif %}">
+    {%- if block.settings.link_to_product and product_item != blank and request.page_type != 'product' -%}
+      <a href="{{ product_item.url }}">{{ product_title | escape }}</a>
+    {%- else -%}
+      {{ product_title | escape }}
+    {%- endif -%}
+  </{{ heading_tag }}>
+
+  {%- if block.settings.metadata_position == 'below' -%}{{ metadata }}{%- endif -%}
+
+  {%- if show_embedded_price or show_embedded_rating -%}
+    <div class="ekko-product-title__supporting">
+      {%- capture embedded_price -%}
+        {%- if show_embedded_price -%}
+          <div id="Price-{{ section.id }}-{{ product_id }}" class="ekko-product-title__price product__price">
+            {%- if product_item == blank -%}
+              {%- render 'product-price', product: product_item, placeholder: true, use_variant: true, class: 'flex flex-wrap items-baseline gap-2' -%}
+            {%- else -%}
+              {%- render 'product-price', product: product_item, use_variant: true, class: 'flex flex-wrap items-baseline gap-2' -%}
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endcapture -%}
+
+      {%- capture embedded_rating -%}
+        {%- if show_embedded_rating -%}
+          <div class="ekko-product-title__rating">
+            {%- if product_item.metafields.reviews.rating.value != blank -%}
+              {%- render 'product-rating', product: product_item, block: block, show_shopify_attributes: false -%}
+            {%- else -%}
+              <div class="product__rating flex items-center gap-2">
+                <span class="rating-star" style="--rating: 0; --rating-max: 5; --rating-decimal: 0;"></span>
+                <span class="text-sm">0.0</span>
+              </div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      {%- endcapture -%}
+
+      {%- if block.settings.supporting_order == 'rating_first' -%}
+        {{ embedded_rating }}{{ embedded_price }}
+      {%- else -%}
+        {{ embedded_price }}{{ embedded_rating }}
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Product title",
+  "settings": [
+    { "type": "header", "content": "Title" },
+    { "type": "select", "id": "heading_tag", "label": "Heading level", "info": "Auto uses H1 on product pages and H2 in Featured product.", "options": [{ "value": "auto", "label": "Auto" }, { "value": "h1", "label": "H1" }, { "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }], "default": "auto" },
+    { "type": "checkbox", "id": "link_to_product", "label": "Link title to product", "info": "Applies outside the product page.", "default": true },
+    { "type": "checkbox", "id": "uppercase_title", "label": "Uppercase title", "default": false },
+    { "type": "checkbox", "id": "break_long_words", "label": "Break unusually long words", "default": true },
+
+    { "type": "header", "content": "Product information" },
+    { "type": "checkbox", "id": "show_vendor", "label": "Show vendor", "default": true },
+    { "type": "checkbox", "id": "link_vendor", "label": "Link vendor", "default": true, "visible_if": "{{ block.settings.show_vendor }}" },
+    { "type": "checkbox", "id": "show_sku", "label": "Show SKU", "default": false },
+    { "type": "text", "id": "sku_label", "label": "SKU label", "default": "SKU", "visible_if": "{{ block.settings.show_sku }}" },
+    { "type": "select", "id": "metadata_position", "label": "Position", "options": [{ "value": "above", "label": "Above title" }, { "value": "below", "label": "Below title" }], "default": "above" },
+    { "type": "select", "id": "metadata_layout", "label": "Layout", "options": [{ "value": "inline", "label": "Inline" }, { "value": "stacked", "label": "Stacked" }], "default": "inline" },
+    { "type": "range", "id": "metadata_size", "label": "Text size", "min": 10, "max": 18, "step": 1, "unit": "px", "default": 12 },
+
+    { "type": "header", "content": "Optional price and rating", "info": "These rows only appear when their standalone Product price or Product rating block is not present." },
+    { "type": "checkbox", "id": "show_price", "label": "Show price when standalone block is absent", "default": false },
+    { "type": "checkbox", "id": "show_rating", "label": "Show rating when standalone block is absent", "default": false },
+    { "type": "checkbox", "id": "show_empty_rating", "label": "Show 0.0 when there are no reviews", "default": false, "visible_if": "{{ block.settings.show_rating }}" },
+    { "type": "select", "id": "supporting_order", "label": "Row order", "options": [{ "value": "price_first", "label": "Price then rating" }, { "value": "rating_first", "label": "Rating then price" }], "default": "price_first", "visible_if": "{{ block.settings.show_price and block.settings.show_rating }}" },
+
+    { "type": "header", "content": "Typography" },
+    { "type": "select", "id": "font_family", "label": "Font", "options": [{ "value": "heading", "label": "Heading" }, { "value": "body", "label": "Body" }], "default": "heading" },
+    { "type": "select", "id": "font_weight", "label": "Weight", "options": [{ "value": "inherit", "label": "Font default" }, { "value": "500", "label": "Medium" }, { "value": "600", "label": "Semibold" }, { "value": "700", "label": "Bold" }], "default": "inherit" },
+    { "type": "select", "id": "title_size", "label": "Desktop size", "options": [{ "value": "small", "label": "Small — 36 px" }, { "value": "medium", "label": "Medium — 48 px" }, { "value": "large", "label": "Large — 60 px" }, { "value": "extra_large", "label": "Extra large — 72 px" }, { "value": "custom", "label": "Custom" }], "default": "medium" },
+    { "type": "range", "id": "font_size", "label": "Custom desktop size", "min": 24, "max": 96, "step": 2, "unit": "px", "default": 48, "visible_if": "{{ block.settings.title_size == 'custom' }}" },
+    { "type": "select", "id": "title_size_mobile", "label": "Mobile size", "options": [{ "value": "small", "label": "Small — 28 px" }, { "value": "medium", "label": "Medium — 34 px" }, { "value": "large", "label": "Large — 40 px" }, { "value": "extra_large", "label": "Extra large — 48 px" }, { "value": "custom", "label": "Custom" }], "default": "medium" },
+    { "type": "range", "id": "font_size_mobile", "label": "Custom mobile size", "min": 20, "max": 64, "step": 2, "unit": "px", "default": 34, "visible_if": "{{ block.settings.title_size_mobile == 'custom' }}" },
+    { "type": "range", "id": "line_height", "label": "Line height", "min": 90, "max": 140, "step": 2, "unit": "%", "default": 104 },
+    { "type": "range", "id": "letter_spacing", "label": "Letter spacing", "min": -8, "max": 4, "step": 1, "unit": "%", "default": -4 },
+    { "type": "checkbox", "id": "limit_width", "label": "Limit title width", "info": "Enable only when you intentionally want a narrower title.", "default": false },
+    { "type": "range", "id": "max_width", "label": "Maximum title width", "min": 12, "max": 48, "step": 1, "unit": "ch", "default": 32, "visible_if": "{{ block.settings.limit_width }}" },
+    { "type": "select", "id": "text_wrap", "label": "Line wrapping", "options": [{ "value": "normal", "label": "Natural" }, { "value": "pretty", "label": "Prevent short last line" }, { "value": "balance", "label": "Balanced" }], "default": "normal" },
+
+    { "type": "header", "content": "Alignment and spacing" },
+    { "type": "text_alignment", "id": "alignment", "label": "Desktop alignment", "default": "left" },
+    { "type": "select", "id": "alignment_mobile", "label": "Mobile alignment", "options": [{ "value": "inherit", "label": "Same as desktop" }, { "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "inherit" },
+    { "type": "range", "id": "content_gap", "label": "Content spacing", "min": 0, "max": 32, "step": 2, "unit": "px", "default": 10 },
+    { "type": "range", "id": "metadata_gap", "label": "Information spacing", "min": 4, "max": 24, "step": 2, "unit": "px", "default": 10 },
+
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "color", "label": "Title", "default": "#1C1C1C" },
+    { "type": "color", "id": "metadata_color", "label": "Product information", "default": "#6B6B6B" }
+  ],
+  "presets": [{ "name": "Product title" }]
+}
+{% endschema %}

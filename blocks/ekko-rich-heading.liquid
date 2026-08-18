@@ -1,0 +1,70 @@
+{% doc %}
+  Renders a highlighted heading for the Ekko Rich text section.
+{% enddoc %}
+
+{%- liquid
+  assign with_gradient = false
+  if section.settings.gradient_highlight != blank
+    assign with_gradient = true
+  endif
+-%}
+
+{% style %}
+  #shopify-block-{{ block.id }} {
+    isolation: isolate;
+  }
+
+  #shopify-block-{{ block.id }} .ekko-richtext-heading {
+    --ekko-richtext-heading-size: {{ block.settings.font_size }}px;
+    --ekko-richtext-heading-size-mobile: {{ block.settings.font_size_mobile }}px;
+    --ekko-richtext-heading-leading: {{ block.settings.line_height | divided_by: 100.0 }};
+    {% if block.settings.color != blank %}color: {{ block.settings.color }};{% endif %}
+  }
+{% endstyle %}
+
+{%- if block.settings.heading != blank -%}
+  <{{ block.settings.heading_tag }} class="ekko-richtext-heading">
+    {%- render 'highlighted-text',
+      content: block.settings.heading,
+      style: block.settings.highlighted_text,
+      scribble: block.settings.highlighted_scribble,
+      gradient: with_gradient
+    -%}
+  </{{ block.settings.heading_tag }}>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-richtext-heading {
+    margin: 0;
+    font-family: var(--font-heading-family);
+    font-size: clamp(1.75rem, var(--ekko-richtext-heading-size), 8rem);
+    font-weight: var(--font-heading-weight, 600);
+    line-height: var(--ekko-richtext-heading-leading);
+    letter-spacing: -.035em;
+    text-wrap: balance;
+  }
+
+  @media screen and (max-width: 767px) {
+    .ekko-richtext-heading {
+      font-size: var(--ekko-richtext-heading-size-mobile);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rich text heading",
+  "settings": [
+    { "type": "inline_richtext", "id": "heading", "label": "t:sections.global.settings.heading.label", "default": "A clearer way to tell your story" },
+    { "type": "select", "id": "heading_tag", "label": "t:sections.global.settings.heading_tag.label", "options": [{ "value": "h1", "label": "H1" }, { "value": "h2", "label": "H2" }, { "value": "h3", "label": "H3" }, { "value": "h4", "label": "H4" }, { "value": "h5", "label": "H5" }, { "value": "h6", "label": "H6" }, { "value": "div", "label": "Div" }, { "value": "p", "label": "Paragraph" }], "default": "h2" },
+    { "type": "range", "id": "font_size", "label": "t:sections.rich-text.blocks.heading.font_size", "min": 24, "max": 120, "step": 2, "unit": "px", "default": 64 },
+    { "type": "range", "id": "font_size_mobile", "label": "t:sections.rich-text.blocks.heading.font_size_mobile", "min": 20, "max": 72, "step": 2, "unit": "px", "default": 40 },
+    { "type": "range", "id": "line_height", "label": "t:sections.rich-text.blocks.heading.line_height", "min": 80, "max": 140, "step": 5, "unit": "%", "default": 100 },
+    { "type": "color", "id": "color", "label": "t:sections.rich-text.blocks.heading.color" },
+    { "type": "header", "content": "t:sections.rich-text.blocks.heading.highlight_header" },
+    { "type": "select", "id": "highlighted_text", "label": "t:sections.global.settings.highlighted_text.label", "options": [{ "value": "none", "label": "t:sections.global.settings.highlighted_text.options__1.label" }, { "value": "text", "label": "t:sections.global.settings.highlighted_text.options__2.label" }, { "value": "full_text", "label": "t:sections.global.settings.highlighted_text.options__3.label" }, { "value": "half_text", "label": "t:sections.global.settings.highlighted_text.options__4.label" }, { "value": "underline", "label": "t:sections.global.settings.highlighted_text.options__5.label" }, { "value": "stencil", "label": "t:sections.global.settings.highlighted_text.options__6.label" }, { "value": "scribble", "label": "t:sections.global.settings.highlighted_text.options__7.label" }], "default": "none" },
+    { "type": "select", "id": "highlighted_scribble", "label": "t:sections.global.settings.highlighted_scribble.label", "options": [{ "value": "circle", "label": "t:sections.global.settings.highlighted_scribble.options__1.label" }, { "value": "basic-underline", "label": "t:sections.global.settings.highlighted_scribble.options__2.label" }, { "value": "sketch-underline", "label": "t:sections.global.settings.highlighted_scribble.options__3.label" }, { "value": "squiggle-underline", "label": "t:sections.global.settings.highlighted_scribble.options__4.label" }, { "value": "squiggle-underline-2", "label": "t:sections.global.settings.highlighted_scribble.options__5.label" }], "default": "circle", "visible_if": "{{ block.settings.highlighted_text == 'scribble' }}" }
+  ],
+  "presets": [{ "name": "Rich text heading" }]
+}
+{% endschema %}

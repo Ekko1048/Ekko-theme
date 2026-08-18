@@ -1,0 +1,120 @@
+{% doc %}
+  Optional add-on products submitted together with the main product form.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+  assign bundle_products = block.settings.products
+
+  if block.settings.metafield != blank and product_item != blank
+    assign metafield_parts = block.settings.metafield | split: '.'
+    assign metafield_namespace = metafield_parts | first
+    assign metafield_key = metafield_parts | last
+    assign product_metafield = product_item.metafields[metafield_namespace][metafield_key]
+    if product_metafield.value != blank and product_metafield.list?
+      assign bundle_products = product_metafield.value
+    endif
+
+    assign variant_metafield = product_item.selected_or_first_available_variant.metafields[metafield_namespace][metafield_key]
+    if variant_metafield.value != blank and variant_metafield.list?
+      assign bundle_products = variant_metafield.value
+    endif
+  endif
+-%}
+
+<div id="ProductBundle-{{ section.id }}-{{ product_id }}" class="ekko-product-block">
+  {%- if bundle_products.count > 0 -%}
+    <details
+      class="product__accordion details with-background"
+      is="product-bundle-details"
+      form="{{ product_form_id }}"
+      {% if product_item.selected_or_first_available_variant.available and block.settings.opened %}open{% endif %}
+    >
+      <summary class="details__summary flex items-center justify-between gap-2 cursor-pointer">
+        <div class="flex items-center gap-2d5">
+          {%- if block.settings.icon_image != blank -%}
+            <figure class="media media--transparent relative" style="width: {{ block.settings.icon_width }}px;">
+              {%- capture icon_sizes -%}{{ block.settings.icon_width }}px{%- endcapture -%}
+              {{- block.settings.icon_image | image_url: width: block.settings.icon_image.width | image_tag: loading: 'lazy', widths: '32,48,64,96,128', sizes: icon_sizes, class: 'image-fit' -}}
+            </figure>
+          {%- elsif block.settings.icon != 'none' -%}
+            {%- render 'icon-accordion', icon: block.settings.icon -%}
+          {%- endif -%}
+          <span class="text-sm-base font-medium leading-none">{{ block.settings.heading | escape }}</span>
+        </div>
+        {%- render 'icon', icon: 'plus-2', size: 'xs', class: 'shrink-0' -%}
+      </summary>
+      <div class="details__content grid gap-2">
+        {%- for bundle_product in bundle_products -%}
+          {%- liquid
+            assign bundle_variant = bundle_product.first_available_variant | default: bundle_product
+            assign bundle_product_resource = bundle_variant.product | default: bundle_product
+            assign show_variant_title = true
+            if bundle_product_resource.has_only_default_variant or bundle_product.first_available_variant == nil
+              assign show_variant_title = false
+            endif
+            assign bundle_image = bundle_variant.image | default: bundle_product_resource.featured_image
+          -%}
+          {%- if bundle_product_resource != blank and bundle_variant.id != product_item.selected_or_first_available_variant.id -%}
+            <label class="product-bundle__info flex items-center gap-4 md:gap-6" for="Bundle-{{ section.id }}-{{ block.id }}-{{ bundle_variant.id }}">
+              <input
+                name="bundles"
+                value="{{ bundle_variant.id }}"
+                data-price="{{ bundle_variant.price }}"
+                class="checkbox"
+                id="Bundle-{{ section.id }}-{{ block.id }}-{{ bundle_variant.id }}"
+                type="checkbox"
+                form="{{ product_form_id }}"
+                {% unless bundle_variant.available %}disabled{% endunless %}
+              >
+              {%- if bundle_image -%}
+                <picture class="horizontal-product__media media media--{{ settings.product_image_ratio }}{% unless settings.product_image_fill %} media--contain{% endunless %} relative overflow-hidden shrink-0 pointer-events-none">
+                  {{- bundle_image | image_url: width: bundle_image.width | image_tag: loading: 'lazy', widths: '180,360,540', sizes: '90px', is: 'lazy-image' -}}
+                </picture>
+              {%- endif -%}
+              <div class="horizontal-product__details flex flex-col justify-start gap-1d5 grow min-w-0">
+                <p class="horizontal-product__title font-medium text-base leading-tight">
+                  {%- if block.settings.clickable -%}
+                    {{- bundle_product_resource.title | link_to: bundle_variant.url, class: 'reversed-link' -}}
+                  {%- else -%}
+                    {{- bundle_product_resource.title | escape -}}
+                  {%- endif -%}
+                </p>
+                {%- if show_variant_title -%}<span class="text-xs text-opacity leading-tight">{{ bundle_variant.title | escape }}</span>{%- endif -%}
+              </div>
+              <div class="horizontal-product__quantity shrink-0">
+                {%- if bundle_variant.available -%}
+                  {%- render 'product-price', product: bundle_product_resource, variant: bundle_variant, use_variant: true, class: 'flex flex-wrap items-baseline gap-2 lg:flex-col xl:items-end lg:gap-1d5' -%}
+                {%- else -%}
+                  <span class="text-sm-base text-opacity">{{ 'products.product.sold_out' | t }}</span>
+                {%- endif -%}
+              </div>
+            </label>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </details>
+  {%- elsif request.design_mode -%}
+    <div class="ekko-product-empty-state text-sm text-opacity">Select bundle products or connect a product-list metafield.</div>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Product bundle",
+  "settings": [
+    { "type": "paragraph", "content": "Selected add-ons are added to cart together with the main product." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Popular upgrades" },
+    { "type": "select", "id": "icon", "label": "Icon", "options": [{ "value": "none", "label": "None" }, { "value": "bag", "label": "Bag" }, { "value": "box", "label": "Box" }, { "value": "gift", "label": "Gift" }, { "value": "star", "label": "Star" }], "default": "box" },
+    { "type": "image_picker", "id": "icon_image", "label": "Custom icon" },
+    { "type": "range", "id": "icon_width", "label": "Icon width", "min": 16, "max": 64, "step": 2, "unit": "px", "default": 24 },
+    { "type": "product_list", "id": "products", "label": "Products" },
+    { "type": "text", "id": "metafield", "label": "Product list metafield", "info": "Optional namespace.key. Variant metafield overrides product metafield, which overrides the selected products." },
+    { "type": "checkbox", "id": "opened", "label": "Open by default", "default": true },
+    { "type": "checkbox", "id": "clickable", "label": "Link product titles", "default": false }
+  ],
+  "presets": [{ "name": "Product bundle" }]
+}
+{% endschema %}

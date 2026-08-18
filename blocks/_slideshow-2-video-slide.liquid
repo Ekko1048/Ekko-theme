@@ -1,0 +1,361 @@
+{% doc %}
+  Renders a hosted-video slide that accepts Slideshow 2 content blocks.
+{% enddoc %}
+
+{%- comment -%}Video timing is coordinated by the Slideshow 2 parent element.{%- endcomment -%}
+
+{%- liquid
+  assign content_width_class = 'page-width'
+  if section.settings.content_width == 'full'
+    assign content_width_class = 'page-width page-width--full'
+  endif
+
+  assign position_parts = block.settings.content_position | split: '-'
+  assign content_vertical = position_parts | first
+  assign content_horizontal = position_parts | last
+  if content_horizontal == 'left'
+    assign content_horizontal = 'start'
+  elsif content_horizontal == 'right'
+    assign content_horizontal = 'end'
+  endif
+  if content_vertical == 'top'
+    assign content_vertical = 'start'
+  elsif content_vertical == 'bottom'
+    assign content_vertical = 'end'
+  endif
+
+  assign position_mobile_parts = block.settings.content_position_mobile | split: '-'
+  assign content_vertical_mobile = position_mobile_parts | first
+  assign content_horizontal_mobile = position_mobile_parts | last
+  if content_horizontal_mobile == 'left'
+    assign content_horizontal_mobile = 'start'
+  elsif content_horizontal_mobile == 'right'
+    assign content_horizontal_mobile = 'end'
+  endif
+  if content_vertical_mobile == 'top'
+    assign content_vertical_mobile = 'start'
+  elsif content_vertical_mobile == 'bottom'
+    assign content_vertical_mobile = 'end'
+  endif
+
+  assign video_mobile = block.settings.video_mobile | default: block.settings.video
+  assign mobile_playback = block.settings.mobile_playback
+  if mobile_playback == 'tap'
+    assign mobile_playback = 'poster'
+  endif
+  assign poster = block.settings.cover_image | default: block.settings.video.preview_image
+  assign poster_mobile = block.settings.cover_image_mobile | default: block.settings.cover_image | default: video_mobile.preview_image
+  assign video_focal_point = poster.presentation.focal_point | default: '50% 50%'
+  assign video_focal_point_mobile = poster_mobile.presentation.focal_point | default: video_focal_point
+-%}
+
+<article
+  class="slideshow-2__slide slideshow-2__slide--video"
+  data-slide
+  data-slide-type="video"
+  data-video-advance="{{ block.settings.advance_mode }}"
+  data-custom-duration="{{ block.settings.custom_duration }}"
+  data-maximum-duration="{{ block.settings.maximum_duration }}"
+  data-fallback-duration="{{ block.settings.fallback_duration }}"
+  data-restart-video="{{ block.settings.restart_video }}"
+  data-video-loop="{{ block.settings.loop_video }}"
+  data-mobile-playback="{{ mobile_playback }}"
+  aria-roledescription="slide"
+  aria-hidden="true"
+  style="
+    --s2-media-position: {{ video_focal_point }};
+    --s2-media-position-mobile: {{ video_focal_point_mobile }};
+    --s2-overlay-color: {{ block.settings.overlay_color }};
+    --s2-overlay-opacity: {{ block.settings.overlay_opacity | divided_by: 100.0 }};
+    --s2-content-x: {{ content_horizontal }};
+    --s2-content-y: {{ content_vertical }};
+    --s2-content-x-mobile: {{ content_horizontal_mobile }};
+    --s2-content-y-mobile: {{ content_vertical_mobile }};
+    --s2-stack-width: {{ block.settings.content_max_width }}px;
+    --s2-stack-width-mobile: {{ block.settings.content_max_width_mobile }}px;
+    --s2-slide-background: {{ block.settings.background_gradient | default: block.settings.background }};
+    --s2-slide-background-mobile: {{ block.settings.mobile_background }};
+    --s2-slide-controls-color: {{ block.settings.controls_color }};
+    --s2-slide-controls-background: {{ block.settings.controls_background }};
+  "
+  {{ block.shopify_attributes }}
+>
+  <div class="slideshow-2__media">
+    {%- if block.settings.video != blank -%}
+      {%- assign poster_url = poster | image_url: width: 2200 -%}
+      {{ block.settings.video | video_tag:
+        autoplay: false,
+        loop: false,
+        muted: true,
+        controls: false,
+        playsinline: true,
+        preload: 'metadata',
+        poster: poster_url,
+        class: 'slideshow-2__media-desktop'
+      }}
+    {%- elsif poster != blank -%}
+      {{ poster | image_url: width: 2200 | image_tag: loading: 'lazy', sizes: '100vw', widths: '750, 1100, 1500, 1800, 2200', class: 'slideshow-2__media-desktop' }}
+    {%- else -%}
+      {{ 'lifestyle-2' | placeholder_svg_tag: 'slideshow-2__placeholder slideshow-2__media-desktop' }}
+    {%- endif -%}
+
+    {%- if video_mobile != blank -%}
+      {%- assign poster_mobile_url = poster_mobile | image_url: width: 1200 -%}
+      {{ video_mobile | video_tag:
+        autoplay: false,
+        loop: false,
+        muted: true,
+        controls: false,
+        playsinline: true,
+        preload: 'metadata',
+        poster: poster_mobile_url,
+        class: 'slideshow-2__media-mobile'
+      }}
+    {%- elsif poster_mobile != blank -%}
+      {{ poster_mobile | image_url: width: 1200 | image_tag: loading: 'lazy', sizes: '100vw', widths: '480, 750, 960, 1200', class: 'slideshow-2__media-mobile' }}
+    {%- else -%}
+      {{ 'lifestyle-2' | placeholder_svg_tag: 'slideshow-2__placeholder slideshow-2__media-mobile' }}
+    {%- endif -%}
+  </div>
+
+  <span class="slideshow-2__overlay"></span>
+
+  <div class="slideshow-2__content">
+    <div class="slideshow-2__content-width {{ content_width_class }}">
+      <div class="slideshow-2__content-stack">
+        {% content_for 'blocks' %}
+      </div>
+    </div>
+  </div>
+</article>
+
+{% schema %}
+{
+  "name": "t:sections.slideshow_2.blocks.video_slide.name",
+  "blocks": [
+    { "type": "_slideshow-2-subheading" },
+    { "type": "_slideshow-2-heading" },
+    { "type": "_slideshow-2-text" },
+    { "type": "_slideshow-2-button" },
+    { "type": "_slideshow-2-image" },
+    { "type": "_slideshow-2-countdown" }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.slideshow_2.blocks.video_slide.media"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "t:sections.slideshow_2.blocks.video_slide.video"
+    },
+    {
+      "type": "image_picker",
+      "id": "cover_image",
+      "label": "t:sections.slideshow_2.blocks.video_slide.cover_image"
+    },
+    {
+      "type": "video",
+      "id": "video_mobile",
+      "label": "t:sections.slideshow_2.blocks.video_slide.video_mobile"
+    },
+    {
+      "type": "image_picker",
+      "id": "cover_image_mobile",
+      "label": "t:sections.slideshow_2.blocks.video_slide.cover_image_mobile"
+    },
+    {
+      "type": "select",
+      "id": "mobile_playback",
+      "label": "t:sections.slideshow_2.blocks.video_slide.mobile_playback",
+      "options": [
+        { "value": "autoplay", "label": "t:sections.slideshow_2.options.autoplay_muted" },
+        { "value": "poster", "label": "t:sections.slideshow_2.options.poster_only" }
+      ],
+      "default": "autoplay"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.slideshow_2.blocks.video_slide.timing"
+    },
+    {
+      "type": "select",
+      "id": "advance_mode",
+      "label": "t:sections.slideshow_2.blocks.video_slide.advance_mode",
+      "info": "t:sections.slideshow_2.blocks.video_slide.advance_mode_info",
+      "options": [
+        { "value": "end", "label": "t:sections.slideshow_2.options.when_video_ends" },
+        { "value": "interval", "label": "t:sections.slideshow_2.options.use_slideshow_interval" },
+        { "value": "custom", "label": "t:sections.slideshow_2.options.custom_duration" },
+        { "value": "manual", "label": "t:sections.slideshow_2.options.manual_only" }
+      ],
+      "default": "end"
+    },
+    {
+      "type": "range",
+      "id": "custom_duration",
+      "min": 5,
+      "max": 120,
+      "step": 5,
+      "unit": "s",
+      "label": "t:sections.slideshow_2.blocks.video_slide.custom_duration",
+      "default": 15,
+      "visible_if": "{{ block.settings.advance_mode == 'custom' }}"
+    },
+    {
+      "type": "range",
+      "id": "maximum_duration",
+      "min": 0,
+      "max": 120,
+      "step": 5,
+      "unit": "s",
+      "label": "t:sections.slideshow_2.blocks.video_slide.maximum_duration",
+      "info": "t:sections.slideshow_2.blocks.video_slide.maximum_duration_info",
+      "default": 0,
+      "visible_if": "{{ block.settings.advance_mode == 'end' }}"
+    },
+    {
+      "type": "range",
+      "id": "fallback_duration",
+      "min": 3,
+      "max": 20,
+      "step": 1,
+      "unit": "s",
+      "label": "t:sections.slideshow_2.blocks.video_slide.fallback_duration",
+      "default": 5
+    },
+    {
+      "type": "checkbox",
+      "id": "restart_video",
+      "label": "t:sections.slideshow_2.blocks.video_slide.restart_video",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "loop_video",
+      "label": "t:sections.slideshow_2.blocks.video_slide.loop_video",
+      "info": "t:sections.slideshow_2.blocks.video_slide.loop_video_info",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.slideshow_2.settings.header_appearance"
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "t:sections.slideshow_2.settings.slide_background",
+      "default": "#1d1d1f"
+    },
+    {
+      "type": "color_background",
+      "id": "background_gradient",
+      "label": "t:sections.slideshow_2.settings.background_gradient"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "t:sections.slideshow_2.settings.overlay_color",
+      "default": "#000000"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "t:sections.slideshow_2.settings.overlay_opacity",
+      "default": 25
+    },
+    {
+      "type": "color",
+      "id": "mobile_background",
+      "label": "t:sections.slideshow_2.settings.mobile_background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "controls_color",
+      "label": "t:sections.slideshow_2.settings.controls_color",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "controls_background",
+      "label": "t:sections.slideshow_2.settings.controls_background",
+      "default": "#111111"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.slideshow_2.settings.header_content_position"
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "t:sections.slideshow_2.settings.content_position",
+      "options": [
+        { "value": "top-left", "label": "t:sections.slideshow_2.options.top_left" },
+        { "value": "top-center", "label": "t:sections.slideshow_2.options.top_center" },
+        { "value": "top-right", "label": "t:sections.slideshow_2.options.top_right" },
+        { "value": "center-left", "label": "t:sections.slideshow_2.options.center_left" },
+        { "value": "center-center", "label": "t:sections.slideshow_2.options.center" },
+        { "value": "center-right", "label": "t:sections.slideshow_2.options.center_right" },
+        { "value": "bottom-left", "label": "t:sections.slideshow_2.options.bottom_left" },
+        { "value": "bottom-center", "label": "t:sections.slideshow_2.options.bottom_center" },
+        { "value": "bottom-right", "label": "t:sections.slideshow_2.options.bottom_right" }
+      ],
+      "default": "center-left"
+    },
+    {
+      "type": "select",
+      "id": "content_position_mobile",
+      "label": "t:sections.slideshow_2.settings.content_position_mobile",
+      "options": [
+        { "value": "top-left", "label": "t:sections.slideshow_2.options.top_left" },
+        { "value": "top-center", "label": "t:sections.slideshow_2.options.top_center" },
+        { "value": "top-right", "label": "t:sections.slideshow_2.options.top_right" },
+        { "value": "center-left", "label": "t:sections.slideshow_2.options.center_left" },
+        { "value": "center-center", "label": "t:sections.slideshow_2.options.center" },
+        { "value": "center-right", "label": "t:sections.slideshow_2.options.center_right" },
+        { "value": "bottom-left", "label": "t:sections.slideshow_2.options.bottom_left" },
+        { "value": "bottom-center", "label": "t:sections.slideshow_2.options.bottom_center" },
+        { "value": "bottom-right", "label": "t:sections.slideshow_2.options.bottom_right" }
+      ],
+      "default": "bottom-left"
+    },
+    {
+      "type": "range",
+      "id": "content_max_width",
+      "min": 320,
+      "max": 900,
+      "step": 20,
+      "unit": "px",
+      "label": "t:sections.slideshow_2.settings.content_max_width",
+      "default": 620
+    },
+    {
+      "type": "range",
+      "id": "content_max_width_mobile",
+      "min": 240,
+      "max": 600,
+      "step": 20,
+      "unit": "px",
+      "label": "t:sections.slideshow_2.settings.content_max_width_mobile",
+      "default": 360
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.slideshow_2.blocks.video_slide.name",
+      "blocks": [
+        { "type": "_slideshow-2-subheading" },
+        { "type": "_slideshow-2-heading" },
+        { "type": "_slideshow-2-countdown" },
+        { "type": "_slideshow-2-button" }
+      ]
+    }
+  ]
+}
+{% endschema %}

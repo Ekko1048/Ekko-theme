@@ -1,0 +1,83 @@
+{% doc %}
+  Product icon list sourced from a list-of-metaobjects metafield.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign icon_metafield_path = block.settings.metafield | default: settings.product_icon_list_metafield
+  assign icon_items = blank
+
+  if product_item != blank and icon_metafield_path != blank
+    assign metafield_parts = icon_metafield_path | split: '.'
+    assign metafield_namespace = metafield_parts | first
+    assign metafield_key = metafield_parts | last
+    assign icon_metafield = product_item.metafields[metafield_namespace][metafield_key]
+    if icon_metafield.value != blank and icon_metafield.list?
+      assign icon_items = icon_metafield.value
+    endif
+  endif
+
+  assign icon_count = icon_items.size
+  assign enable_carousel = false
+  if block.settings.enable_carousel and icon_count > 1
+    assign enable_carousel = true
+  endif
+-%}
+
+{%- if icon_count > 0 -%}
+  <div class="ekko-product-block product__highlights{% if block.settings.heading != blank %} with-heading{% endif %} flex flex-col gap-5 relative">
+    {%- if block.settings.heading != blank -%}<p class="font-medium leading-tight md:text-lg">{{ block.settings.heading | escape }}</p>{%- endif -%}
+    <scroll-shadow class="product-card__spec block overflow-hidden">
+      <div
+        class="product-card__icons product-card__icons--count-{{ icon_count }}{% unless enable_carousel %} product-card__icons--grid{% endunless %} flex flex-nowrap"
+        {% if enable_carousel %}is="icons-carousel" data-speed="{{ block.settings.carousel_speed }}"{% endif %}
+      >
+        {%- for item in icon_items -%}
+          {%- liquid
+            assign item_icon = item.icon.value | default: item.icon
+            assign item_title = item.title.value | default: item.title
+            assign item_description = item.description.value | default: item.description
+          -%}
+          <div class="product-card__icon shrink-0">
+            <div class="flex gap-2">
+              {%- if item_icon != blank -%}
+                <figure class="shrink-0 media media--transparent relative inline-block">
+                  {{- item_icon | image_url: width: item_icon.width | image_tag: loading: 'lazy', sizes: '32px', widths: '64,96,128,192', class: 'w-full h-full', is: 'lazy-image' -}}
+                </figure>
+              {%- endif -%}
+              <div class="flex flex-col gap-1 text-sm font-medium leading-none">
+                {%- if item_title != blank -%}<p class="product-card__icon-title">{{ item_title | escape }}</p>{%- endif -%}
+                {%- if item_description != blank -%}<p class="product-card__icon-description text-opacity font-normal text-xs leading-tight">{{ item_description | escape }}</p>{%- endif -%}
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+      <template>
+        <slot></slot>
+        <s dir="{% render 'direction' %}" style="--t: 0; --b: 0; --l: 0; --r: 0;"><span class="l"></span><span class="r"></span></s>
+        <style>
+          :host{display:inline-block;position:relative}:host([hidden]){display:none}s{position:absolute;inset:0;pointer-events:none;overflow:hidden}s span{position:absolute;inset-block:0;width:clamp(var(--sp-12),4.73vw,var(--sp-23));opacity:0;transition:opacity var(--animation-short)}s .l{inset-inline-start:0;opacity:var(--l);background:linear-gradient(90deg,rgb(var(--color-background)) 0%,transparent 100%)}s .r{inset-inline-end:0;opacity:var(--r);background:linear-gradient(270deg,rgb(var(--color-background)) 0%,transparent 100%)}
+        </style>
+      </template>
+    </scroll-shadow>
+  </div>
+{%- elsif request.design_mode -%}
+  <div class="ekko-product-block ekko-product-empty-state text-sm text-opacity">
+    Connect a list-of-metaobjects product metafield. The metaobject can contain icon, title, and description fields.
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Icon list",
+  "settings": [
+    { "type": "paragraph", "content": "Uses a list-of-metaobjects product metafield with icon, title, and description fields." },
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Why you'll love it" },
+    { "type": "text", "id": "metafield", "label": "Icon list metafield", "info": "Enter namespace.key. Leave blank to use the metafield selected in Theme settings > Products." },
+    { "type": "checkbox", "id": "enable_carousel", "label": "Auto-scroll on desktop hover", "default": false },
+    { "type": "range", "id": "carousel_speed", "label": "Carousel speed", "min": 10, "max": 80, "step": 5, "default": 30, "visible_if": "{{ block.settings.enable_carousel }}" }
+  ],
+  "presets": [{ "name": "Icon list" }]
+}
+{% endschema %}

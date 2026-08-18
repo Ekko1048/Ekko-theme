@@ -1,0 +1,18 @@
+{% doc %}
+  Product breadcrumb navigation with optional collection and mobile visibility.
+{% enddoc %}
+
+{%- assign product_item = product | default: section.settings.product -%}
+{%- render 'product-breadcrumb', block: block, product_resource: product_item -%}
+
+{% schema %}
+{
+  "name": "Breadcrumb",
+  "settings": [
+    { "type": "checkbox", "id": "show_collections_link", "label": "Show collections link", "default": true },
+    { "type": "checkbox", "id": "show_product_title", "label": "Show product title", "default": true },
+    { "type": "checkbox", "id": "show_on_mobile", "label": "Show on mobile", "default": false }
+  ],
+  "presets": [{ "name": "Breadcrumb" }]
+}
+{% endschema %}

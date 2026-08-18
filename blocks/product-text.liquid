@@ -1,0 +1,50 @@
+{% doc %}
+  Flexible text sourced from custom content, vendor, or product type.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign text_value = block.settings.text
+  case block.settings.source
+    when 'vendor'
+      assign text_value = product_item.vendor
+    when 'type'
+      assign text_value = product_item.type
+  endcase
+-%}
+
+{%- if text_value != blank -%}
+  <div
+    class="ekko-product-block ekko-product-text ekko-product-text--{{ block.settings.style }} flex items-start gap-3"
+    style="--product-block-color: {{ block.settings.color }}; --product-text-size: {{ block.settings.font_size }}px; --product-text-size-mobile: {{ block.settings.font_size_mobile }}px; --product-text-background: {{ block.settings.background }}; --product-text-icon-width: {{ block.settings.icon_width }}px;"
+  >
+    {%- if block.settings.icon_image != blank -%}
+      <figure class="ekko-product-text__icon media media--transparent relative shrink-0">
+        {%- capture icon_sizes -%}{{ block.settings.icon_width }}px{%- endcapture -%}
+        {{- block.settings.icon_image | image_url: width: block.settings.icon_image.width | image_tag: loading: 'lazy', widths: '32,48,64,96,128', sizes: icon_sizes, class: 'image-fit' -}}
+      </figure>
+    {%- elsif block.settings.icon != 'none' -%}
+      <span class="ekko-product-text__icon shrink-0">{%- render 'icon-guarantee', icon: block.settings.icon, size: 'lg', class: 'stroke-1' -%}</span>
+    {%- endif -%}
+    <div class="rte">{{ text_value }}</div>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Text",
+  "settings": [
+    { "type": "select", "id": "source", "label": "Content source", "options": [{ "value": "custom", "label": "Custom text" }, { "value": "vendor", "label": "Product vendor" }, { "value": "type", "label": "Product type" }], "default": "custom" },
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Share product details, materials, or a short selling point.</p>", "visible_if": "{{ block.settings.source == 'custom' }}" },
+    { "type": "select", "id": "style", "label": "Style", "options": [{ "value": "plain", "label": "Plain" }, { "value": "soft", "label": "Soft background" }], "default": "plain" },
+    { "type": "select", "id": "icon", "label": "Icon", "options": [{ "value": "none", "label": "None" }, { "value": "award", "label": "Award" }, { "value": "box", "label": "Box" }, { "value": "check_mark", "label": "Check mark" }, { "value": "gift", "label": "Gift" }, { "value": "heart", "label": "Heart" }, { "value": "return", "label": "Return" }, { "value": "shield", "label": "Shield" }, { "value": "truck", "label": "Truck" }], "default": "none" },
+    { "type": "image_picker", "id": "icon_image", "label": "Custom icon" },
+    { "type": "range", "id": "icon_width", "label": "Icon width", "min": 16, "max": 80, "step": 2, "unit": "px", "default": 24 },
+    { "type": "range", "id": "font_size", "label": "Desktop font size", "min": 12, "max": 28, "step": 1, "unit": "px", "default": 15 },
+    { "type": "range", "id": "font_size_mobile", "label": "Mobile font size", "min": 12, "max": 24, "step": 1, "unit": "px", "default": 14 },
+    { "type": "color", "id": "color", "label": "Text color", "default": "#1C1C1C" },
+    { "type": "color", "id": "background", "label": "Background", "default": "#F4F2EE", "visible_if": "{{ block.settings.style == 'soft' }}" }
+  ],
+  "presets": [{ "name": "Text" }]
+}
+{% endschema %}

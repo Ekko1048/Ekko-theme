@@ -1,0 +1,245 @@
+{% doc %}
+  Renders a product component image and nested specification rows in an accordion.
+{% enddoc %}
+
+<details
+  class="ekko-product-detail-row"
+  style="
+    --ekko-pd-row-color: {{ block.settings.text_color | default: section.settings.text_color }};
+    --ekko-pd-row-background: {{ block.settings.background | default: section.settings.surface_color }};
+    --ekko-pd-image-ratio: {{ block.settings.image_ratio }};
+    --ekko-pd-image-fit: {{ block.settings.image_fit }};
+  "
+  {% if block.settings.opened %}open{% endif %}
+  {{ block.shopify_attributes }}
+>
+  <summary class="ekko-product-detail-row__summary">
+    <span class="ekko-product-detail-row__summary-main">
+      {%- if block.settings.icon_image != blank -%}
+        {{ block.settings.icon_image | image_url: width: 96 | image_tag: loading: 'lazy', widths: '32,48,64,96', sizes: '24px', class: 'ekko-product-detail-row__icon' }}
+      {%- endif -%}
+      <span>{{ block.settings.heading | escape }}</span>
+    </span>
+    <span class="ekko-product-detail-row__toggle" aria-hidden="true">
+      <svg viewBox="0 0 16 16" width="16" height="16" fill="none"><path d="M8 2.5v11M2.5 8h11" stroke="currentColor" stroke-linecap="round"/></svg>
+    </span>
+  </summary>
+
+  <div class="ekko-product-detail-row__content{% if block.settings.image == blank %} ekko-product-detail-row__content--without-image{% elsif block.settings.image_position == 'right' %} ekko-product-detail-row__content--image-right{% endif %}">
+    {%- if block.settings.image != blank -%}
+      <figure class="ekko-product-detail-row__media">
+        {{ block.settings.image | image_url: width: 1200 | image_tag:
+          loading: 'lazy',
+          widths: '320,480,640,800,1000,1200',
+          sizes: '(max-width: 749px) calc(100vw - 64px), (max-width: 989px) 42vw, 30vw',
+          class: 'ekko-product-detail-row__image'
+        }}
+      </figure>
+    {%- endif -%}
+
+    <div class="ekko-product-detail-row__data">
+      {%- if block.settings.eyebrow != blank -%}
+        <p class="ekko-product-detail-row__eyebrow">{{ block.settings.eyebrow | escape }}</p>
+      {%- endif -%}
+      <div class="ekko-product-detail-row__children ekko-product-detail-row__children--{{ block.settings.row_style }}">
+        {% content_for 'blocks' %}
+      </div>
+    </div>
+  </div>
+</details>
+
+{% stylesheet %}
+  .ekko-product-detail-row {
+    overflow: clip;
+    color: var(--ekko-pd-row-color);
+    background: var(--ekko-pd-row-background);
+    border-radius: clamp(.65rem, 1.2vw, 1rem);
+    interpolate-size: allow-keywords;
+  }
+
+  .ekko-product-detail-row + .ekko-product-detail-row { margin-block-start: .25rem; }
+
+  .ekko-product-detail-row::details-content {
+    block-size: 0;
+    opacity: 0;
+    overflow: hidden;
+    transition: block-size 220ms ease, opacity 160ms ease;
+  }
+
+  .ekko-product-detail-row[open]::details-content {
+    block-size: auto;
+    opacity: 1;
+  }
+
+  .ekko-product-detail-row__summary {
+    display: flex;
+    min-height: 4.75rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.25rem clamp(1.25rem, 2.5vw, 2rem);
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-heading-family);
+    font-size: clamp(1.05rem, 1.5vw, 1.3rem);
+    font-weight: var(--font-heading-weight, 600);
+    line-height: 1.2;
+  }
+
+  .ekko-product-detail-row__summary::-webkit-details-marker { display: none; }
+
+  .ekko-product-detail-row__summary-main {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: .75rem;
+  }
+
+  .ekko-product-detail-row__icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    object-fit: contain;
+  }
+
+  .ekko-product-detail-row__toggle {
+    display: grid;
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 50%;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+    transition: transform 180ms ease, background-color 180ms ease;
+  }
+
+  .ekko-product-detail-row[open] .ekko-product-detail-row__toggle {
+    transform: rotate(45deg);
+    background: color-mix(in srgb, currentColor 13%, transparent);
+  }
+
+  .ekko-product-detail-row__content {
+    display: grid;
+    grid-template-columns: minmax(11rem, 36%) minmax(0, 1fr);
+    gap: clamp(1.25rem, 2.5vw, 2.25rem);
+    padding: .25rem clamp(1.25rem, 2.5vw, 2rem) clamp(1.5rem, 3vw, 2.5rem);
+  }
+
+  .ekko-product-detail-row__content--image-right { grid-template-columns: minmax(0, 1fr) minmax(11rem, 36%); }
+  .ekko-product-detail-row__content--image-right .ekko-product-detail-row__media { order: 2; }
+  .ekko-product-detail-row__content--without-image { grid-template-columns: minmax(0, 1fr); }
+
+  .ekko-product-detail-row__media {
+    width: 100%;
+    margin: 0;
+    aspect-ratio: var(--ekko-pd-image-ratio);
+    align-self: start;
+  }
+
+  .ekko-product-detail-row__image {
+    width: 100%;
+    height: 100%;
+    object-fit: var(--ekko-pd-image-fit);
+  }
+
+  .ekko-product-detail-row__data { min-width: 0; }
+
+  .ekko-product-detail-row__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin: 0 0 .625rem;
+    opacity: .62;
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  .ekko-product-detail-row__eyebrow::after {
+    content: '';
+    height: 1px;
+    flex: 1 1 auto;
+    background: color-mix(in srgb, currentColor 16%, transparent);
+  }
+
+  .ekko-product-detail-row__children {
+    display: grid;
+    gap: .125rem;
+  }
+
+  .ekko-product-detail-row__children > .shopify-block {
+    min-width: 0;
+  }
+
+  .ekko-product-detail-row__children > .shopify-block:has(> .ekko-product-spec-row) {
+    display: block;
+  }
+
+  .ekko-product-detail-row__children > .shopify-block:has(> .ekko-product-detail-note) {
+    display: block;
+    padding-inline: .875rem;
+  }
+
+  .ekko-product-detail-row__children--alternating > .shopify-block:nth-child(odd):has(.ekko-product-spec-row) {
+    background: color-mix(in srgb, currentColor 5%, transparent);
+    border-radius: .5rem;
+  }
+
+  @media screen and (max-width: 749px) {
+    .ekko-product-detail-row__summary {
+      min-height: 4rem;
+      padding: 1rem 1.125rem;
+    }
+
+    .ekko-product-detail-row__content,
+    .ekko-product-detail-row__content--image-right {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+      padding: .25rem 1.125rem 1.5rem;
+    }
+
+    .ekko-product-detail-row__content--image-right .ekko-product-detail-row__media { order: initial; }
+
+    .ekko-product-detail-row__media {
+      width: min(100%, 28rem);
+      max-height: 22rem;
+      margin-inline: auto;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Collapsible detail",
+  "blocks": [
+    { "type": "_product-details-spec-row" },
+    { "type": "_product-details-note" }
+  ],
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Row heading", "default": "Materials & construction" },
+    { "type": "image_picker", "id": "icon_image", "label": "Heading icon" },
+    { "type": "checkbox", "id": "opened", "label": "Open by default", "default": false },
+    { "type": "header", "content": "Product component image" },
+    { "type": "image_picker", "id": "image", "label": "Image" },
+    { "type": "select", "id": "image_position", "label": "Image position", "options": [{ "value": "left", "label": "Left" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "select", "id": "image_ratio", "label": "Image ratio", "options": [{ "value": "1 / 1", "label": "Square" }, { "value": "4 / 3", "label": "Landscape" }, { "value": "3 / 4", "label": "Portrait" }], "default": "1 / 1" },
+    { "type": "select", "id": "image_fit", "label": "Image fit", "options": [{ "value": "contain", "label": "Contain" }, { "value": "cover", "label": "Cover" }], "default": "contain" },
+    { "type": "header", "content": "Row content" },
+    { "type": "text", "id": "eyebrow", "label": "Table label", "default": "Component details" },
+    { "type": "select", "id": "row_style", "label": "Table style", "options": [{ "value": "plain", "label": "Plain" }, { "value": "alternating", "label": "Alternating rows" }], "default": "plain" },
+    { "type": "header", "content": "Colors" },
+    { "type": "color", "id": "text_color", "label": "Text" },
+    { "type": "color", "id": "background", "label": "Background" }
+  ],
+  "presets": [
+    {
+      "name": "Collapsible detail",
+      "blocks": [
+        { "type": "_product-details-spec-row", "settings": { "label": "Material", "value": "Aircraft-grade aluminum" } },
+        { "type": "_product-details-spec-row", "settings": { "label": "Weight", "value": "240 g" } },
+        { "type": "_product-details-spec-row", "settings": { "label": "Dimensions", "value": "18 × 12 cm" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

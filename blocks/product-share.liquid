@@ -1,0 +1,239 @@
+{% doc %}
+  Product sharing controls with the existing responsive share drawer.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign selected_variant = product_item.selected_or_first_available_variant
+  assign share_url = selected_variant.url | default: product_item.url | prepend: request.origin
+  assign share_image = selected_variant.featured_image | default: product_item.featured_image
+  assign help_drawer_id = 'HelpDrawer-' | append: section.id | append: '-' | append: block.id
+-%}
+
+{%- if product_item != blank -%}
+  <product-share-help
+    data-block-id="{{ block.id }}"
+    data-drawer-id="{{ help_drawer_id }}"
+  >
+  <div class="ekko-product-block ekko-product-share flex justify-between items-center gap-4" data-product-share-anchor>
+    {%- render 'social-sharing',
+      section_id: section.id,
+      share_id: product_item.id,
+      share_label: block.settings.share_label,
+      share_title: product_item.title,
+      share_link: share_url,
+      share_image: share_image
+    -%}
+
+    {%- if block.settings.show_help_desk -%}
+      <div class="flex items-center gap-2">
+        {%- render 'icon', icon: 'question' -%}
+        <a
+          class="link text-sm leading-tight cursor-pointer"
+          {% if block.settings.help_type == 'drawer' %}
+            href="#{{ help_drawer_id }}"
+            aria-controls="{{ help_drawer_id }}"
+            aria-expanded="false"
+          {% elsif block.settings.help_page != blank %}
+            href="{{ block.settings.help_page.url }}"
+          {% else %}
+            role="link"
+            aria-disabled="true"
+          {% endif %}
+        >
+          {{- block.settings.help_label | escape -}}
+        </a>
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- if block.settings.show_help_desk and block.settings.help_type == 'drawer' -%}
+    <drawer-element
+      id="{{ help_drawer_id }}"
+      class="drawer drawer--end z-30 fixed bottom-0 left-0 h-full w-full pointer-events-none"
+      role="dialog"
+      aria-modal="true"
+      aria-label="{{ block.settings.drawer_heading | escape }}"
+      data-section-id="{{ section.id }}"
+      hidden
+    >
+      <overlay-element class="overlay fixed-modal invisible opacity-0 fixed bottom-0 left-0 w-full h-screen pointer-events-none" aria-controls="{{ help_drawer_id }}" aria-expanded="false"></overlay-element>
+      <div class="drawer__inner z-10 absolute top-0 flex flex-col w-full h-full overflow-hidden">
+        <gesture-element class="drawer__header flex justify-between opacity-0 invisible relative">
+          <span class="drawer__title heading lg:text-3xl text-2xl leading-none tracking-tight">{{ block.settings.drawer_heading | escape }}</span>
+          <button class="button button--secondary button--close drawer__close hidden sm:flex items-center justify-center" type="button" is="hover-button" aria-controls="{{ help_drawer_id }}" aria-expanded="false" aria-label="{{ 'general.accessibility.close' | t | escape }}">
+            <span class="btn-fill" data-fill></span>
+            <span class="btn-text">{%- render 'icon', icon: 'close', size: 'sm' -%}</span>
+          </button>
+        </gesture-element>
+        <div class="drawer__content opacity-0 invisible flex flex-col h-full grow shrink">
+          <div class="drawer__scrollable relative flex flex-col gap-5 md:gap-7 grow shrink">
+            {%- if block.settings.drawer_description != blank -%}
+              <div class="rte text-base">{{ block.settings.drawer_description }}</div>
+            {%- endif -%}
+            <ul class="help-list grid gap-4 md:gap-5">
+              {% content_for 'blocks' %}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </drawer-element>
+  {%- endif -%}
+  </product-share-help>
+{%- endif -%}
+
+{% javascript %}
+  if (!customElements.get('product-share-help')) {
+    customElements.define('product-share-help', class ProductShareHelp extends HTMLElement {
+      connectedCallback() {
+        this.abortController = new AbortController();
+        this.drawer = document.getElementById(this.dataset.drawerId);
+        this.drawer?.addEventListener('drawer:afterHide', this.handleDrawerAfterHide, {
+          signal: this.abortController.signal
+        });
+        document.addEventListener('shopify:block:select', this.handleBlockSelect, {
+          signal: this.abortController.signal
+        });
+        document.addEventListener('shopify:block:deselect', this.handleBlockDeselect, {
+          signal: this.abortController.signal
+        });
+        document.addEventListener('shopify:section:deselect', this.handleSectionDeselect, {
+          signal: this.abortController.signal
+        });
+      }
+
+      disconnectedCallback() {
+        this.abortController?.abort();
+
+        if (this.drawer?.open) this.drawer.hide();
+        if (this.drawer?.parentElement === document.body) this.appendChild(this.drawer);
+      }
+
+      get parentBlock() {
+        return this.closest(`#shopify-block-${CSS.escape(this.dataset.blockId)}`);
+      }
+
+      getHelpItem(target) {
+        const closestItem = target.closest?.('[data-product-help-entry]');
+        if (closestItem) return closestItem;
+
+        return target.querySelector?.(':scope > [data-product-help-entry]') || null;
+      }
+
+      closeDrawer(drawer, immediate = false) {
+        if (!drawer.open) {
+          if (immediate) drawer.hidden = true;
+          return;
+        }
+
+        drawer.hide();
+        if (immediate) drawer.hidden = true;
+      }
+
+      handleBlockSelect = (event) => {
+        const drawer = this.drawer || document.getElementById(this.dataset.drawerId);
+        const selectedItem = this.getHelpItem(event.target);
+        if (!drawer) return;
+
+        if (event.target === this.parentBlock) {
+          this.closeDrawer(drawer, true);
+          return;
+        }
+
+        if (!selectedItem || !drawer.contains(selectedItem)) {
+          this.closeDrawer(drawer, true);
+          return;
+        }
+
+        if (!drawer.open) drawer.show(null, false);
+      };
+
+      handleBlockDeselect = (event) => {
+        const drawer = this.drawer || document.getElementById(this.dataset.drawerId);
+        const deselectedItem = this.getHelpItem(event.target);
+        if (!drawer || !deselectedItem || !drawer.contains(deselectedItem)) return;
+
+        this.closeDrawer(drawer);
+      };
+
+      handleSectionDeselect = (event) => {
+        const drawer = this.drawer || document.getElementById(this.dataset.drawerId);
+        const section = this.closest('.shopify-section');
+        if (!drawer || !section || event.target !== section) return;
+
+        this.closeDrawer(drawer);
+      };
+
+      handleDrawerAfterHide = () => {
+        if (!Shopify.designMode || !this.drawer || this.drawer.parentElement !== document.body) return;
+
+        this.appendChild(this.drawer);
+      };
+    });
+  }
+{% endjavascript %}
+
+{% stylesheet %}
+  product-share-help {
+    display: contents;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Share",
+  "blocks": [
+    { "type": "_product-help-content" },
+    { "type": "_product-help-item" }
+  ],
+  "settings": [
+    { "type": "text", "id": "share_label", "label": "Share label", "default": "Share" },
+    { "type": "checkbox", "id": "show_help_desk", "label": "Show help link", "default": true },
+    { "type": "text", "id": "help_label", "label": "Help label", "default": "Need help?", "visible_if": "{{ block.settings.show_help_desk }}" },
+    { "type": "select", "id": "help_type", "label": "Help link type", "options": [{ "value": "drawer", "label": "Help drawer" }, { "value": "page", "label": "Page" }], "default": "drawer", "visible_if": "{{ block.settings.show_help_desk }}" },
+    { "type": "page", "id": "help_page", "label": "Help page" },
+    { "type": "header", "content": "Help drawer" },
+    { "type": "text", "id": "drawer_heading", "label": "Heading", "default": "Need help?" },
+    { "type": "richtext", "id": "drawer_description", "label": "Description", "default": "<p>Choose a help option below and we'll point you in the right direction.</p>" }
+  ],
+  "presets": [
+    {
+      "name": "Share",
+      "blocks": [
+        {
+          "type": "_product-help-content",
+          "settings": {
+            "icon": "rocket",
+            "heading": "Shipping <em>information</em>",
+            "text": "<p>Share delivery times, order processing details, and shipping policies.</p>",
+            "highlighted_text": "half_text",
+            "color_text": "#7C4A03",
+            "color_background": "#FFF8E8",
+            "color_highlight": "#FFD99A"
+          }
+        },
+        {
+          "type": "_product-help-item",
+          "settings": {
+            "icon": "email",
+            "heading": "Customer support",
+            "text": "<p>Send us a message and our team will help you.</p>",
+            "link_label": "Email us",
+            "link_type": "email"
+          }
+        },
+        {
+          "type": "_product-help-item",
+          "settings": {
+            "icon": "chat_bubble",
+            "heading": "More ways to get help",
+            "text": "<p>Find answers, delivery information, and store policies.</p>",
+            "link_label": "Contact us",
+            "link_type": "url"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,55 @@
+{% doc %}
+  Renders rich text inside a Slideshow 2 slide.
+{% enddoc %}
+
+{%- capture block_content -%}
+  {%- if block.settings.text != blank -%}
+    <div class="slideshow-2__text rte" style="--s2-text-size: {{ block.settings.font_size }}px; --s2-text-size-mobile: {{ block.settings.font_size_mobile }}px;">
+      {{ block.settings.text }}
+    </div>
+  {%- endif -%}
+{%- endcapture -%}
+
+{% render 'slideshow-2-content-block', block: block, content: block_content %}
+
+{% stylesheet %}
+  .slideshow-2__text {
+    font-size: var(--s2-text-size);
+    line-height: 1.55;
+  }
+
+  .slideshow-2__text > :first-child { margin-block-start: 0; }
+  .slideshow-2__text > :last-child { margin-block-end: 0; }
+
+  @media screen and (max-width: 767px) {
+    .slideshow-2__text { font-size: var(--s2-text-size-mobile); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "t:sections.slideshow_2.blocks.text.name",
+  "settings": [
+    { "type": "richtext", "id": "text", "label": "t:sections.slideshow_2.block_settings.text", "default": "<p>Build a scene from flexible content, responsive media, and precise timing.</p>" },
+    { "type": "range", "id": "font_size", "min": 12, "max": 30, "step": 1, "unit": "px", "label": "t:sections.slideshow_2.block_settings.font_size", "default": 18 },
+    { "type": "range", "id": "font_size_mobile", "min": 12, "max": 24, "step": 1, "unit": "px", "label": "t:sections.slideshow_2.block_settings.font_size_mobile", "default": 16 },
+    { "type": "color", "id": "color", "label": "t:sections.slideshow_2.block_settings.color" },
+    { "type": "color", "id": "color_mobile", "label": "t:sections.slideshow_2.block_settings.color_mobile" },
+    { "type": "header", "content": "t:sections.slideshow_2.block_settings.header_position" },
+    { "type": "select", "id": "visibility", "label": "t:sections.slideshow_2.block_settings.visibility", "options": [{ "value": "all", "label": "t:sections.slideshow_2.options.all_devices" }, { "value": "desktop", "label": "t:sections.slideshow_2.options.desktop_only" }, { "value": "mobile", "label": "t:sections.slideshow_2.options.mobile_only" }], "default": "all" },
+    { "type": "select", "id": "position_mode", "label": "t:sections.slideshow_2.block_settings.position_mode", "options": [{ "value": "flow", "label": "t:sections.slideshow_2.options.follow_stack" }, { "value": "free", "label": "t:sections.slideshow_2.options.free_position" }], "default": "flow" },
+    { "type": "range", "id": "width", "min": 20, "max": 100, "step": 5, "unit": "%", "label": "t:sections.slideshow_2.block_settings.width", "default": 80 },
+    { "type": "range", "id": "width_mobile", "min": 20, "max": 100, "step": 5, "unit": "%", "label": "t:sections.slideshow_2.block_settings.width_mobile", "default": 100 },
+    { "type": "select", "id": "alignment", "label": "t:sections.slideshow_2.block_settings.alignment", "options": [{ "value": "flex-start", "label": "t:sections.slideshow_2.options.left" }, { "value": "center", "label": "t:sections.slideshow_2.options.center" }, { "value": "flex-end", "label": "t:sections.slideshow_2.options.right" }], "default": "flex-start" },
+    { "type": "select", "id": "alignment_mobile", "label": "t:sections.slideshow_2.block_settings.alignment_mobile", "options": [{ "value": "flex-start", "label": "t:sections.slideshow_2.options.left" }, { "value": "center", "label": "t:sections.slideshow_2.options.center" }, { "value": "flex-end", "label": "t:sections.slideshow_2.options.right" }], "default": "flex-start" },
+    { "type": "range", "id": "spacing_top", "min": 0, "max": 80, "step": 4, "unit": "px", "label": "t:sections.slideshow_2.block_settings.spacing_top", "default": 16 },
+    { "type": "range", "id": "spacing_top_mobile", "min": 0, "max": 60, "step": 2, "unit": "px", "label": "t:sections.slideshow_2.block_settings.spacing_top_mobile", "default": 12 },
+    { "type": "range", "id": "position_x", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_x", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "position_y", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_y", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "position_x_mobile", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_x_mobile", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "position_y_mobile", "min": 0, "max": 100, "step": 1, "unit": "%", "label": "t:sections.slideshow_2.block_settings.position_y_mobile", "default": 50, "visible_if": "{{ block.settings.position_mode == 'free' }}" },
+    { "type": "range", "id": "z_index", "min": 1, "max": 10, "step": 1, "label": "t:sections.slideshow_2.block_settings.z_index", "default": 2, "visible_if": "{{ block.settings.position_mode == 'free' }}" }
+  ],
+  "presets": [{ "name": "t:sections.slideshow_2.blocks.text.name" }]
+}
+{% endschema %}

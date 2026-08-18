@@ -1,0 +1,35 @@
+{% doc %}
+  Add-to-cart and dynamic checkout controls.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+-%}
+
+{%- if product_item != blank -%}
+  {%- render 'buy-buttons', block: block, product: product_item, product_id: product_id, section_id: section.id, product_form_id: product_form_id, show_shopify_attributes: false -%}
+{%- else -%}
+  <div class="ekko-product-block product-form-wrapper">
+    <button class="button button--primary ekko-product-showcase__placeholder-button" type="button" disabled>
+      <span class="btn-text">{{ 'products.product.add_to_cart' | t }}</span>
+    </button>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Buy buttons",
+  "settings": [
+    { "type": "checkbox", "id": "show_quantity_selector", "label": "Show quantity selector inside buttons", "info": "Keep this off when using the separate Quantity selector block.", "default": true },
+    { "type": "checkbox", "id": "show_price", "label": "Show price in button", "default": false },
+    { "type": "checkbox", "id": "show_dynamic_checkout", "label": "Show dynamic checkout button", "default": true },
+    { "type": "checkbox", "id": "show_gift_card_recipient", "label": "Show gift card recipient form", "default": true },
+    { "type": "checkbox", "id": "enable_back_in_stock", "label": "Enable back in stock alert", "default": false },
+    { "type": "checkbox", "id": "show_back_in_stock_name", "label": "Ask for customer name", "default": false, "visible_if": "{{ block.settings.enable_back_in_stock }}" },
+    { "type": "checkbox", "id": "show_back_in_stock_phone", "label": "Ask for phone number", "default": false, "visible_if": "{{ block.settings.enable_back_in_stock }}" }
+  ],
+  "presets": [{ "name": "Buy buttons" }]
+}
+{% endschema %}

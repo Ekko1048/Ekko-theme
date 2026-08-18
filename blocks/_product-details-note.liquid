@@ -1,0 +1,50 @@
+{% doc %}
+  Renders supporting content below Product details specification rows.
+{% enddoc %}
+
+{%- liquid
+  assign metafield_namespace = block.settings.metafield_namespace | strip
+  assign metafield_key = block.settings.metafield_key | strip
+  assign metafield = blank
+  if metafield_namespace != blank and metafield_key != blank
+    assign metafield = product.metafields[metafield_namespace][metafield_key]
+  endif
+-%}
+
+{%- if block.settings.text != blank or block.settings.page != blank or metafield.value != blank -%}
+  <div class="ekko-product-detail-note rte" {{ block.shopify_attributes }}>
+    {%- if metafield.value != blank -%}
+      {{ metafield | metafield_tag }}
+    {%- elsif block.settings.page != blank -%}
+      {{ block.settings.page.content }}
+    {%- else -%}
+      {{ block.settings.text }}
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-product-detail-note {
+    margin-block-start: 1rem;
+    color: color-mix(in srgb, currentColor 72%, transparent);
+    font-size: .95rem;
+    line-height: 1.55;
+  }
+
+  .ekko-product-detail-note > :first-child { margin-block-start: 0; }
+  .ekko-product-detail-note > :last-child { margin-block-end: 0; }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Detail note",
+  "settings": [
+    { "type": "richtext", "id": "text", "label": "Text", "default": "<p>Add any care instructions or helpful context for this component.</p>" },
+    { "type": "page", "id": "page", "label": "Page" },
+    { "type": "header", "content": "Optional product metafield" },
+    { "type": "text", "id": "metafield_namespace", "label": "Namespace", "info": "Example: custom" },
+    { "type": "text", "id": "metafield_key", "label": "Key" }
+  ],
+  "presets": [{ "name": "Detail note" }]
+}
+{% endschema %}

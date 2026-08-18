@@ -1,0 +1,141 @@
+{% doc %}
+  Renders a configurable call-to-action button in Rich text.
+{% enddoc %}
+
+{% style %}
+  #shopify-block-{{ block.id }} .ekko-richtext-button {
+    --buttons-border-width: 0px;
+    border: 0;
+    {% if block.settings.text_color != blank %}color: {{ block.settings.text_color }};{% endif %}
+    {% if block.settings.style != 'link' and block.settings.background_color != blank %}
+      background: {{ block.settings.background_color }};
+      background-color: {{ block.settings.background_color }};
+    {% endif %}
+  }
+
+  #shopify-block-{{ block.id }} .ekko-richtext-button::after {
+    border: 0;
+  }
+
+  {% if block.settings.style != 'link' and block.settings.hover_background_color != blank %}
+    #shopify-block-{{ block.id }} .ekko-richtext-button .btn-fill {
+      background: {{ block.settings.hover_background_color }};
+      background-color: {{ block.settings.hover_background_color }};
+    }
+  {% endif %}
+
+  @media screen and (pointer: fine) {
+    #shopify-block-{{ block.id }} .ekko-richtext-button:hover {
+      {% if block.settings.hover_text_color != blank %}color: {{ block.settings.hover_text_color }};{% endif %}
+      {% if block.settings.style != 'link' and block.settings.hover_background_color != blank %}
+        background: {{ block.settings.hover_background_color }};
+        background-color: {{ block.settings.hover_background_color }};
+      {% endif %}
+    }
+  }
+
+  @media screen and (max-width: 767px) {
+    #shopify-block-{{ block.id }} .ekko-richtext-button {
+      {% if block.settings.text_color_mobile != blank %}
+        color: {{ block.settings.text_color_mobile }};
+      {% elsif block.settings.text_color != blank %}
+        color: {{ block.settings.text_color }};
+      {% endif %}
+      {% if block.settings.style != 'link' and block.settings.background_color_mobile != blank %}
+        background: {{ block.settings.background_color_mobile }};
+        background-color: {{ block.settings.background_color_mobile }};
+      {% elsif block.settings.style != 'link' and block.settings.background_color != blank %}
+        background: {{ block.settings.background_color }};
+        background-color: {{ block.settings.background_color }};
+      {% endif %}
+    }
+
+    {% if block.settings.style != 'link' and block.settings.hover_background_color_mobile != blank %}
+      #shopify-block-{{ block.id }} .ekko-richtext-button .btn-fill {
+        background: {{ block.settings.hover_background_color_mobile }};
+        background-color: {{ block.settings.hover_background_color_mobile }};
+      }
+    {% elsif block.settings.style != 'link' and block.settings.hover_background_color != blank %}
+      #shopify-block-{{ block.id }} .ekko-richtext-button .btn-fill {
+        background: {{ block.settings.hover_background_color }};
+        background-color: {{ block.settings.hover_background_color }};
+      }
+    {% endif %}
+  }
+
+  @media screen and (max-width: 767px) and (pointer: fine) {
+    #shopify-block-{{ block.id }} .ekko-richtext-button:hover {
+      {% if block.settings.hover_text_color_mobile != blank %}
+        color: {{ block.settings.hover_text_color_mobile }};
+      {% elsif block.settings.hover_text_color != blank %}
+        color: {{ block.settings.hover_text_color }};
+      {% endif %}
+      {% if block.settings.style != 'link' and block.settings.hover_background_color_mobile != blank %}
+        background: {{ block.settings.hover_background_color_mobile }};
+        background-color: {{ block.settings.hover_background_color_mobile }};
+      {% elsif block.settings.style != 'link' and block.settings.hover_background_color != blank %}
+        background: {{ block.settings.hover_background_color }};
+        background-color: {{ block.settings.hover_background_color }};
+      {% endif %}
+    }
+  }
+{% endstyle %}
+
+{%- liquid
+  assign button_size = block.settings.size
+  if button_size == 'sm'
+    assign button_size = 'small'
+  elsif button_size == 'lg'
+    assign button_size = 'large'
+  endif
+-%}
+
+{%- if block.settings.label != blank -%}
+  <div class="ekko-richtext-action{% if block.settings.full_width_mobile %} ekko-richtext-action--mobile-full{% endif %}">
+    {%- render 'button',
+      label: block.settings.label,
+      link: block.settings.link,
+      size: button_size,
+      style: block.settings.style,
+      external: block.settings.external,
+      show_icon: block.settings.show_icon,
+      classes: 'ekko-richtext-button'
+    -%}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-richtext-action { display: block; }
+
+  @media screen and (max-width: 767px) {
+    .ekko-richtext-action--mobile-full,
+    .ekko-richtext-action--mobile-full .ekko-richtext-button {
+      width: 100%;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rich text button",
+  "settings": [
+    { "type": "text", "id": "label", "label": "t:sections.global.settings.button_label.label", "default": "Explore more" },
+    { "type": "url", "id": "link", "label": "t:sections.global.settings.button_link.label" },
+    { "type": "select", "id": "style", "label": "t:sections.global.settings.button_style.label", "options": [{ "value": "primary", "label": "t:sections.global.settings.button_style.options__1.label" }, { "value": "secondary", "label": "t:sections.global.settings.button_style.options__2.label" }, { "value": "link", "label": "t:sections.global.settings.button_style.options__3.label" }], "default": "primary" },
+    { "type": "select", "id": "size", "label": "t:sections.global.settings.button_size.label", "options": [{ "value": "small", "label": "t:sections.global.settings.button_size.options__1.label" }, { "value": "md", "label": "t:sections.global.settings.button_size.options__2.label" }, { "value": "large", "label": "t:sections.global.settings.button_size.options__3.label" }], "default": "md" },
+    { "type": "checkbox", "id": "external", "label": "t:sections.global.settings.button_external.label", "default": false },
+    { "type": "checkbox", "id": "show_icon", "label": "t:sections.global.settings.button_icon.label", "default": true },
+    { "type": "checkbox", "id": "full_width_mobile", "label": "t:sections.rich-text.blocks.button.full_width_mobile", "default": false },
+    { "type": "color", "id": "text_color", "label": "t:sections.rich-text.blocks.button.text_color" },
+    { "type": "color", "id": "text_color_mobile", "label": "t:sections.rich-text.blocks.button.text_color_mobile" },
+    { "type": "color", "id": "background_color", "label": "t:sections.rich-text.blocks.button.background_color", "visible_if": "{{ block.settings.style != 'link' }}" },
+    { "type": "color", "id": "background_color_mobile", "label": "t:sections.rich-text.blocks.button.background_color_mobile", "visible_if": "{{ block.settings.style != 'link' }}" },
+    { "type": "header", "content": "t:sections.rich-text.blocks.button.hover_header" },
+    { "type": "color", "id": "hover_text_color", "label": "t:sections.rich-text.blocks.button.hover_text_color" },
+    { "type": "color", "id": "hover_text_color_mobile", "label": "t:sections.rich-text.blocks.button.hover_text_color_mobile" },
+    { "type": "color", "id": "hover_background_color", "label": "t:sections.rich-text.blocks.button.hover_background_color", "visible_if": "{{ block.settings.style != 'link' }}" },
+    { "type": "color", "id": "hover_background_color_mobile", "label": "t:sections.rich-text.blocks.button.hover_background_color_mobile", "visible_if": "{{ block.settings.style != 'link' }}" }
+  ],
+  "presets": [{ "name": "Rich text button" }]
+}
+{% endschema %}

@@ -1,0 +1,73 @@
+{% doc %}
+  Standalone quantity selector connected to the main product form.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+  assign variant = product_item.selected_or_first_available_variant
+-%}
+
+{%- if product_item != blank and product_item.available -%}
+  {%- assign cart_qty = cart | item_count_for_variant: variant.id -%}
+  <div id="QuantityForm-{{ section.id }}-{{ product_id }}" class="ekko-product-block ekko-product-quantity field">
+    {%- unless block.settings.hide_label -%}
+      <label for="Quantity-{{ section.id }}-{{ product_id }}" class="quantity__label label" is="quantity-label">
+        {{- block.settings.label | default: 'Quantity' | escape -}}
+        <span id="QuantityRulesCart-{{ section.id }}-{{ product_id }}" class="quantity__rules-cart{% if cart_qty == 0 %} hidden{% endif %} relative">
+          <span class="quantity-cart font-medium">({{ 'products.quantity.in_cart_html' | t: quantity: cart_qty }})</span>
+        </span>
+      </label>
+    {%- else -%}
+      <label for="Quantity-{{ section.id }}-{{ product_id }}" class="sr-only">{{ block.settings.label | default: 'Quantity' | escape }}</label>
+    {%- endunless -%}
+
+    <quantity-input class="quantity inline-flex relative" data-section-id="{{ section.id }}" data-product-id="{{ product_id }}">
+      <button type="button" name="minus" class="quantity__button" aria-label="{{ 'products.quantity.decrease' | t: product: product_item.title | escape }}">
+        {%- render 'icon', icon: 'chevron-left', size: 'sm', class: 'stroke-2 transform' -%}
+      </button>
+      <input
+        id="Quantity-{{ section.id }}-{{ product_id }}"
+        class="quantity__input text-sm sm:text-base font-medium text-center"
+        type="number"
+        name="quantity"
+        inputmode="numeric"
+        autocomplete="off"
+        data-quantity-variant-id="{{ variant.id }}"
+        data-cart-quantity="{{ cart_qty }}"
+        data-min="{{ variant.quantity_rule.min }}"
+        min="{{ variant.quantity_rule.min }}"
+        {% if variant.quantity_rule.max != null %}data-max="{{ variant.quantity_rule.max }}" max="{{ variant.quantity_rule.max }}"{% endif %}
+        step="{{ variant.quantity_rule.increment }}"
+        value="{{ variant.quantity_rule.min }}"
+        form="{{ product_form_id }}"
+      >
+      <button type="button" name="plus" class="quantity__button" aria-label="{{ 'products.quantity.increase' | t: product: product_item.title | escape }}">
+        {%- render 'icon', icon: 'chevron-right', size: 'sm', class: 'stroke-2 transform' -%}
+      </button>
+    </quantity-input>
+
+    {%- if block.settings.show_rules -%}
+      {%- if variant.quantity_rule.increment > 1 or variant.quantity_rule.min > 1 or variant.quantity_rule.max != null -%}
+        <div class="quantity__rules text-sm font-medium leading-tight" id="QuantityRules-{{ section.id }}-{{ product_id }}">
+          {%- if variant.quantity_rule.increment > 1 -%}<span class="divider">{{ 'products.quantity.multiples_of' | t: quantity: variant.quantity_rule.increment }}</span>{%- endif -%}
+          {%- if variant.quantity_rule.min > 1 -%}<span class="divider">{{ 'products.quantity.minimum_of' | t: quantity: variant.quantity_rule.min }}</span>{%- endif -%}
+          {%- if variant.quantity_rule.max != null -%}<span class="divider">{{ 'products.quantity.maximum_of' | t: quantity: variant.quantity_rule.max }}</span>{%- endif -%}
+        </div>
+      {%- endif -%}
+    {%- endif -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Quantity selector",
+  "settings": [
+    { "type": "text", "id": "label", "label": "Label", "default": "Quantity" },
+    { "type": "checkbox", "id": "hide_label", "label": "Visually hide label", "default": false },
+    { "type": "checkbox", "id": "show_rules", "label": "Show quantity rules", "default": true }
+  ],
+  "presets": [{ "name": "Quantity selector" }]
+}
+{% endschema %}

@@ -1,0 +1,59 @@
+{% doc %}
+  Product labels, sale information, and availability badges.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign wrapper_class = 'ekko-product-badges ekko-product-badges--' | append: block.settings.alignment | append: ' flex flex-wrap gap-2'
+-%}
+
+{%- if product_item != blank -%}
+  <div class="ekko-product-block">
+    {%- render 'product-badges',
+      product: product_item,
+      class: wrapper_class,
+      show_product_labels: block.settings.show_product_labels,
+      label_metafield: block.settings.label_metafield,
+      label_background: block.settings.label_background,
+      label_foreground: block.settings.label_foreground,
+      custom_label: block.settings.custom_label,
+      custom_background: block.settings.custom_background,
+      custom_foreground: block.settings.custom_foreground,
+      show_save_amount: block.settings.show_save_amount,
+      save_type: block.settings.save_type,
+      sale_background: block.settings.sale_background,
+      sale_foreground: block.settings.sale_foreground,
+      show_sold_out: block.settings.show_sold_out,
+      sold_out_background: block.settings.sold_out_background,
+      sold_out_foreground: block.settings.sold_out_foreground
+    -%}
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Badges",
+  "settings": [
+    { "type": "select", "id": "alignment", "label": "Alignment", "options": [{ "value": "left", "label": "Left" }, { "value": "center", "label": "Center" }, { "value": "right", "label": "Right" }], "default": "left" },
+    { "type": "header", "content": "Product labels" },
+    { "type": "checkbox", "id": "show_product_labels", "label": "Show product labels", "default": true },
+    { "type": "text", "id": "label_metafield", "label": "Label metafield", "info": "Enter namespace.key. Leave blank to use theme.label." },
+    { "type": "color", "id": "label_background", "label": "Label background", "default": "#171717" },
+    { "type": "color", "id": "label_foreground", "label": "Label text", "default": "#FFFFFF" },
+    { "type": "header", "content": "Custom badge" },
+    { "type": "text", "id": "custom_label", "label": "Text" },
+    { "type": "color", "id": "custom_background", "label": "Background", "default": "#171717" },
+    { "type": "color", "id": "custom_foreground", "label": "Text color", "default": "#FFFFFF" },
+    { "type": "header", "content": "Sale badge" },
+    { "type": "checkbox", "id": "show_save_amount", "label": "Show sale badge", "default": true },
+    { "type": "select", "id": "save_type", "label": "Sale information", "options": [{ "value": "percent", "label": "Percentage" }, { "value": "dollar", "label": "Amount" }, { "value": "label", "label": "Sale label" }], "default": "percent" },
+    { "type": "color", "id": "sale_background", "label": "Sale background", "default": "#E64646" },
+    { "type": "color", "id": "sale_foreground", "label": "Sale text", "default": "#FFFFFF" },
+    { "type": "header", "content": "Sold out badge" },
+    { "type": "checkbox", "id": "show_sold_out", "label": "Show sold out badge", "default": true },
+    { "type": "color", "id": "sold_out_background", "label": "Sold out background", "default": "#E9E9E7" },
+    { "type": "color", "id": "sold_out_foreground", "label": "Sold out text", "default": "#171717" }
+  ],
+  "presets": [{ "name": "Badges" }]
+}
+{% endschema %}

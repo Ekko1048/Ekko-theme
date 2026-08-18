@@ -1,0 +1,24 @@
+{% doc %}
+  Product rating block with an optional empty-state preview.
+{% enddoc %}
+
+{%- assign product_item = product | default: section.settings.product -%}
+
+{%- if product_item.metafields.reviews.rating.value != blank -%}
+  {%- render 'product-rating', product: product_item, block: block, show_shopify_attributes: false -%}
+{%- elsif block.settings.show_empty or product_item == blank -%}
+  <div class="ekko-product-block product__rating flex items-center gap-2">
+    <span class="rating-star" style="--rating: 0; --rating-max: 5; --rating-decimal: 0;"></span>
+    <span class="text-sm">0.0</span>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product rating",
+  "settings": [
+    { "type": "checkbox", "id": "show_empty", "label": "Show when no reviews exist", "default": false }
+  ],
+  "presets": [{ "name": "Product rating" }]
+}
+{% endschema %}

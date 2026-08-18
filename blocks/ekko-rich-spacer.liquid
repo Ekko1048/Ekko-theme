@@ -1,0 +1,28 @@
+{% doc %}
+  Adds responsive vertical breathing room inside Rich text.
+{% enddoc %}
+
+<div
+  class="ekko-richtext-spacer"
+  style="--ekko-richtext-spacer: {{ block.settings.height }}px; --ekko-richtext-spacer-mobile: {{ block.settings.height_mobile }}px;"
+  aria-hidden="true"
+></div>
+
+{% stylesheet %}
+  .ekko-richtext-spacer { height: var(--ekko-richtext-spacer); }
+
+  @media screen and (max-width: 767px) {
+    .ekko-richtext-spacer { height: var(--ekko-richtext-spacer-mobile); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rich text spacer",
+  "settings": [
+    { "type": "range", "id": "height", "label": "t:sections.empty-space.settings.height.label", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 32 },
+    { "type": "range", "id": "height_mobile", "label": "t:sections.empty-space.settings.height_mobile.label", "min": 0, "max": 120, "step": 4, "unit": "px", "default": 20 }
+  ],
+  "presets": [{ "name": "Rich text spacer" }]
+}
+{% endschema %}

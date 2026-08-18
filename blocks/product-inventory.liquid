@@ -1,0 +1,31 @@
+{% doc %}
+  Product inventory status and low-stock progress.
+{% enddoc %}
+
+{%- liquid
+  assign product_item = product | default: section.settings.product
+  assign product_id = product_item.id | default: section.id
+  assign product_form_id = 'ProductForm-' | append: section.id | append: '-' | append: product_id
+-%}
+
+{%- if product_item != blank -%}
+  {%- render 'product-inventory', block: block, product: product_item, product_id: product_id, section_id: section.id, product_form_id: product_form_id, show_shopify_attributes: false -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Inventory status",
+  "settings": [
+    { "type": "select", "id": "inventory_style", "label": "Style", "options": [{ "value": "classic", "label": "Classic" }, { "value": "status_bar", "label": "Status with progress bar" }], "default": "classic" },
+    { "type": "range", "id": "inventory_threshold", "label": "Low inventory threshold", "min": 0, "max": 100, "step": 1, "default": 10 },
+    { "type": "range", "id": "inventory_bar_max", "label": "Progress bar full at", "info": "The inventory quantity represented by a full progress bar.", "min": 5, "max": 100, "step": 5, "default": 20, "visible_if": "{{ block.settings.inventory_style == 'status_bar' }}" },
+    { "type": "select", "id": "show_inventory_quantity", "label": "Show inventory quantity", "options": [{ "value": "always", "label": "Always" }, { "value": "low", "label": "Only when low" }, { "value": "none", "label": "Never" }], "default": "low" },
+    { "type": "checkbox", "id": "show_inventory_transfer", "label": "Show incoming inventory", "default": true },
+    { "type": "select", "id": "color_scheme", "label": "Progress color", "options": [{ "value": "accent-1", "label": "Accent 1" }, { "value": "accent-2", "label": "Accent 2" }, { "value": "accent-3", "label": "Accent 3" }, { "value": "accent-4", "label": "Accent 4" }, { "value": "accent-5", "label": "Accent 5" }, { "value": "accent-6", "label": "Accent 6" }], "default": "accent-1", "visible_if": "{{ block.settings.inventory_style == 'classic' }}" },
+    { "type": "color", "id": "in_stock_color", "label": "In-stock color", "default": "#109B36", "visible_if": "{{ block.settings.inventory_style == 'status_bar' }}" },
+    { "type": "color", "id": "low_stock_color", "label": "Low-stock color", "default": "#109B36", "visible_if": "{{ block.settings.inventory_style == 'status_bar' }}" },
+    { "type": "color", "id": "bar_background_color", "label": "Progress background", "default": "#E5E7EB", "visible_if": "{{ block.settings.inventory_style == 'status_bar' }}" }
+  ],
+  "presets": [{ "name": "Inventory status" }]
+}
+{% endschema %}

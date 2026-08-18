@@ -1,0 +1,65 @@
+{% doc %}
+  Renders responsive rich copy with optional highlighted emphasis.
+{% enddoc %}
+
+{%- liquid
+  assign with_gradient = false
+  if section.settings.gradient_highlight != blank
+    assign with_gradient = true
+  endif
+-%}
+
+{% style %}
+  #shopify-block-{{ block.id }} .ekko-richtext-copy {
+    --ekko-richtext-copy-size: {{ block.settings.font_size }}px;
+    --ekko-richtext-copy-size-mobile: {{ block.settings.font_size_mobile }}px;
+    --ekko-richtext-copy-opacity: {{ block.settings.opacity | divided_by: 100.0 }};
+    {% if block.settings.color != blank %}color: {{ block.settings.color }};{% endif %}
+  }
+{% endstyle %}
+
+{%- if block.settings.text != blank -%}
+  <div class="ekko-richtext-copy rte ekko-richtext-copy--{{ block.settings.font }}">
+    {%- render 'highlighted-text',
+      content: block.settings.text,
+      style: block.settings.highlighted_text,
+      scribble: block.settings.highlighted_scribble,
+      gradient: with_gradient
+    -%}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-richtext-copy {
+    font-size: var(--ekko-richtext-copy-size);
+    line-height: 1.55;
+    opacity: var(--ekko-richtext-copy-opacity);
+    text-wrap: pretty;
+  }
+
+  .ekko-richtext-copy--heading { font-family: var(--font-heading-family); }
+  .ekko-richtext-copy > :first-child { margin-block-start: 0; }
+  .ekko-richtext-copy > :last-child { margin-block-end: 0; }
+
+  @media screen and (max-width: 767px) {
+    .ekko-richtext-copy { font-size: var(--ekko-richtext-copy-size-mobile); }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rich text copy",
+  "settings": [
+    { "type": "richtext", "id": "text", "label": "t:sections.global.settings.text.label", "default": "<p>Use flexible content blocks to introduce your brand, explain a product, or create a focused call to action.</p>" },
+    { "type": "range", "id": "font_size", "label": "t:sections.rich-text.blocks.text.font_size", "min": 12, "max": 48, "step": 1, "unit": "px", "default": 20 },
+    { "type": "range", "id": "font_size_mobile", "label": "t:sections.rich-text.blocks.text.font_size_mobile", "min": 12, "max": 32, "step": 1, "unit": "px", "default": 17 },
+    { "type": "select", "id": "font", "label": "t:sections.rich-text.blocks.text.font", "options": [{ "value": "body", "label": "t:sections.global.settings.text_font.options__1.label" }, { "value": "heading", "label": "t:sections.global.settings.text_font.options__2.label" }], "default": "body" },
+    { "type": "range", "id": "opacity", "label": "t:sections.rich-text.blocks.text.opacity", "min": 40, "max": 100, "step": 5, "unit": "%", "default": 80 },
+    { "type": "color", "id": "color", "label": "t:sections.rich-text.blocks.text.color" },
+    { "type": "header", "content": "t:sections.rich-text.blocks.heading.highlight_header" },
+    { "type": "select", "id": "highlighted_text", "label": "t:sections.global.settings.highlighted_text.label", "options": [{ "value": "none", "label": "t:sections.global.settings.highlighted_text.options__1.label" }, { "value": "text", "label": "t:sections.global.settings.highlighted_text.options__2.label" }, { "value": "full_text", "label": "t:sections.global.settings.highlighted_text.options__3.label" }, { "value": "half_text", "label": "t:sections.global.settings.highlighted_text.options__4.label" }, { "value": "underline", "label": "t:sections.global.settings.highlighted_text.options__5.label" }, { "value": "stencil", "label": "t:sections.global.settings.highlighted_text.options__6.label" }, { "value": "scribble", "label": "t:sections.global.settings.highlighted_text.options__7.label" }], "default": "none" },
+    { "type": "select", "id": "highlighted_scribble", "label": "t:sections.global.settings.highlighted_scribble.label", "options": [{ "value": "circle", "label": "t:sections.global.settings.highlighted_scribble.options__1.label" }, { "value": "basic-underline", "label": "t:sections.global.settings.highlighted_scribble.options__2.label" }, { "value": "sketch-underline", "label": "t:sections.global.settings.highlighted_scribble.options__3.label" }, { "value": "squiggle-underline", "label": "t:sections.global.settings.highlighted_scribble.options__4.label" }, { "value": "squiggle-underline-2", "label": "t:sections.global.settings.highlighted_scribble.options__5.label" }], "default": "circle", "visible_if": "{{ block.settings.highlighted_text == 'scribble' }}" }
+  ],
+  "presets": [{ "name": "Rich text copy" }]
+}
+{% endschema %}

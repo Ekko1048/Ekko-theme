@@ -1,0 +1,24 @@
+{% doc %}
+  Renders merchant-provided Liquid within the Rich text content stack.
+{% enddoc %}
+
+{%- if block.settings.liquid != blank -%}
+  <div class="ekko-richtext-liquid rte">
+    {{ block.settings.liquid }}
+  </div>
+{%- endif -%}
+
+{% stylesheet %}
+  .ekko-richtext-liquid > :first-child { margin-block-start: 0; }
+  .ekko-richtext-liquid > :last-child { margin-block-end: 0; }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rich text custom Liquid",
+  "settings": [
+    { "type": "liquid", "id": "liquid", "label": "t:sections.custom-liquid.settings.liquid.label", "info": "t:sections.custom-liquid.settings.liquid.info" }
+  ],
+  "presets": [{ "name": "Rich text custom Liquid" }]
+}
+{% endschema %}
